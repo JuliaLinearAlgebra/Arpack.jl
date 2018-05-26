@@ -1,7 +1,5 @@
 # This file is a part of Julia. License is MIT: https://julialang.org/license
 
-module ARPACK
-
 import LinearAlgebra: BlasInt, ARPACKException
 
 ## aupd and eupd wrappers
@@ -286,5 +284,3 @@ for (T, TR, naupd_name, neupd_name) in
         end
     end
 end
-
-end # module ARPACK

@@ -5,7 +5,7 @@ __precompile__(true)
 """
 Arnoldi and Lanczos iteration for computing eigenvalues
 """
-module IterativeEigensolvers
+module Arpack
 
 using LinearAlgebra: BlasFloat, BlasInt, Diagonal, I, SVD, UniformScaling,
                      checksquare, factorize,ishermitian, issymmetric, mul!,
@@ -15,8 +15,6 @@ import LinearAlgebra
 export eigs, svds
 
 include("arpack.jl")
-
-using .ARPACK
 
 ## eigs
 """
@@ -32,7 +30,7 @@ final residual vector `resid`.
 
 # Examples
 ```jldoctest
-julia> using IterativeEigensolvers
+julia> using Arpack
 
 julia> A = Diagonal(1:4);
 

@@ -1,6 +1,6 @@
 # This file is a part of Julia. License is MIT: https://julialang.org/license
 
-using IterativeEigensolvers
+using Arpack
 using Test, LinearAlgebra, SparseArrays, Random
 
 @testset "eigs" begin

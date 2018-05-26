@@ -1,7 +1,7 @@
 # [Iterative Eigensolvers](@id lib-itereigen)
 
 ```@meta
-DocTestSetup = :(using IterativeEigensolvers, LinearAlgebra, SparseArrays)
+DocTestSetup = :(using Arpack, LinearAlgebra, SparseArrays)
 ```
 
 Julia provides bindings to [ARPACK](http://www.caam.rice.edu/software/ARPACK/), which
@@ -198,9 +198,9 @@ julia> λ
 
 
 ```@docs
-IterativeEigensolvers.eigs(::Any)
-IterativeEigensolvers.eigs(::Any, ::Any)
-IterativeEigensolvers.svds
+Arpack.eigs(::Any)
+Arpack.eigs(::Any, ::Any)
+Arpack.svds
 ```
 
 ```@meta
