@@ -1,10 +1,10 @@
-# [Iterative Eigensolvers](@id lib-itereigen)
+# [Arpack](@id lib-itereigen)
 
 ```@meta
 DocTestSetup = :(using Arpack, LinearAlgebra, SparseArrays)
 ```
 
-Julia provides bindings to [ARPACK](http://www.caam.rice.edu/software/ARPACK/), which
+This package provides bindings to [ARPACK](http://www.caam.rice.edu/software/ARPACK/), which
 can be used to perform iterative solutions for eigensystems (using [`eigs`](@ref))
 or singular value decompositions (using [`svds`](@ref)).
 
