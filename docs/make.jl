@@ -12,7 +12,7 @@ makedocs(
 deploydocs(
     repo = "github.com/JuliaLinearAlgebra/Arpack.jl.git",
     target = "build",
-    julia  = "0.7-",
+    julia  = "nightly",
     deps = nothing,
     make = nothing
 )
