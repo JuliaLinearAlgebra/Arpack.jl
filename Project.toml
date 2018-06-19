@@ -1,5 +1,5 @@
 name = "Arpack"
-uuid = "de3e0322-70d6-11e8-3ee7-e7a191c6bc53"
+uuid = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
