@@ -7,9 +7,7 @@ Arnoldi and Lanczos iteration for computing eigenvalues
 """
 module Arpack
 
-using Libdl
-
-const libarpack = Libdl.find_library("libarpack", [joinpath(@__DIR__, "..", "deps", "usr", "lib")])
+include("../deps/deps.jl")
 
 using LinearAlgebra: BlasFloat, BlasInt, Diagonal, I, SVD, UniformScaling,
                      checksquare, factorize,ishermitian, issymmetric, mul!,
