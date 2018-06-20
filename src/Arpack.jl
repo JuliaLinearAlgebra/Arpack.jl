@@ -129,9 +129,6 @@ function _eigs(A, B;
     end
     sigma = isshift ? convert(T,sigma) : zero(T)
 
-    if (!explicittransform && isgeneral && !ishermitian(B))
-        @warn "B matrix not hermitian. Explicit transformation is generally needed unless B is definite. "
-    end
     if (explicittransform==true && (which==:LM || which==:LR || which == :LI) && !isgeneral)
         @warn "Explicit transformation with :L* for standard eigenvalue problems has no meaning. Changing to explicittransform=false."
        explicittransform=false
