@@ -18,7 +18,7 @@ include("libarpack.jl")
 
 ## eigs
 """
-    eigs(A; nev=6, ncv=max(20,2*nev+1), which=:LM, tol=0.0, maxiter=300, sigma=nothing, ritzvec=true, v0=zeros((0,))) -> (d,[v,],nconv,niter,nmult,resid)
+    eigs(A; nev=6, ncv=max(20,2*nev+1), which=:LM, tol=0.0, maxiter=300, sigma=nothing, ritzvec=true, explicittransform=:auto, v0=zeros((0,))) -> (d,[v,],nconv,niter,nmult,resid)
 
 Computes eigenvalues `d` of `A` using implicitly restarted Lanczos or Arnoldi iterations for real symmetric or
 general nonsymmetric matrices respectively. See [the manual](@ref lib-itereigen) for more information.
@@ -26,7 +26,8 @@ general nonsymmetric matrices respectively. See [the manual](@ref lib-itereigen)
 `eigs` returns the `nev` requested eigenvalues in `d`, the corresponding Ritz vectors `v`
 (only if `ritzvec=true`), the number of converged eigenvalues `nconv`, the number of
 iterations `niter` and the number of matrix vector multiplications `nmult`, as well as the
-final residual vector `resid`.
+final residual vector `resid`. The parameter `explicittransform` takes the values `:auto`, `:none`
+or `:shiftinvert`, specifying if shift and invert should be explicitly invoked in julia code. 
 
 # Examples
 ```jldoctest
