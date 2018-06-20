@@ -27,7 +27,7 @@ general nonsymmetric matrices respectively. See [the manual](@ref lib-itereigen)
 (only if `ritzvec=true`), the number of converged eigenvalues `nconv`, the number of
 iterations `niter` and the number of matrix vector multiplications `nmult`, as well as the
 final residual vector `resid`. The parameter `explicittransform` takes the values `:auto`, `:none`
-or `:shiftinvert`, specifying if shift and invert should be explicitly invoked in julia code. 
+or `:shiftinvert`, specifying if shift and invert should be explicitly invoked in julia code.
 
 # Examples
 ```jldoctest
@@ -68,7 +68,7 @@ eigs(A, B; kwargs...) = _eigs(A, B; kwargs...)
 function _eigs(A, B;
                nev::Integer=6, ncv::Integer=max(20,2*nev+1), which=:LM,
                tol=0.0, maxiter::Integer=300, sigma=nothing, v0::Vector=zeros(eltype(A),(0,)),
-               ritzvec::Bool=true, explicittransform::Union{Bool, Nothing}=nothing)
+               ritzvec::Bool=true, explicittransform::Symbol=:auto)
     n = checksquare(A)
 
     eigval_postprocess = false; # If we need to shift-and-invert eigvals as postprocessing
@@ -116,12 +116,12 @@ function _eigs(A, B;
         which=:LM
     end
 
-    if (explicittransform==nothing)
+    if (explicittransform==:auto)
         # Try to automatically detect if it is good to carry out an explicittransform
         if (isgeneral && (isshift  || which==:LM))
-            explicittransform = true
+            explicittransform = :shiftinvert
         else
-            explicittransform = false
+            explicittransform = :none
         end
     end
 
@@ -130,13 +130,13 @@ function _eigs(A, B;
     end
     sigma = isshift ? convert(T,sigma) : zero(T)
 
-    if (explicittransform==true && (which==:LM || which==:LR || which == :LI) && !isgeneral)
+    if (explicittransform==:shiftinvert && (which==:LM || which==:LR || which == :LI) && !isgeneral)
         @warn "Explicit transformation with :L* for standard eigenvalue problems has no meaning. Changing to explicittransform=false."
-       explicittransform=false
+       explicittransform=:none
     end
 
     sigma0=sigma; # Store for inverted shift-and-invert
-    if explicittransform
+    if explicittransform==:shiftinvert
         isgeneral=false
         bmat="I"
         sym=false # Explicit transform destroys symmetry in general
@@ -192,10 +192,10 @@ function _eigs(A, B;
 
     # Refer to ex-*.doc files in ARPACK/DOCUMENTS for calling sequence
     matvecA! = (y, x) -> mul!(y, A, x)
-    if !isgeneral || explicittransform      # Standard problem
+    if !isgeneral || (explicittransform==:shiftinvert)      # Standard problem
         matvecB = x -> x
 
-        if (!explicittransform)
+        if (explicittransform == :none)
             if !isshift         #    Regular mode
                 mode       = 1
                 solveSI = x->x
