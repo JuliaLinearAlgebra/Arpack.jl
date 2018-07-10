@@ -7,7 +7,16 @@ Arnoldi and Lanczos iteration for computing eigenvalues
 """
 module Arpack
 
-include("../deps/deps.jl")
+if isfile("../deps/deps.jl")
+    include("../deps/deps.jl")
+else
+    throw(ErrorException("""
+No deps.jl file could be found. Please try running Pkg.build("Arpack").
+Currently, the build command might fail when Julia has been built from source
+and the recommendation is to use the official binaries from julialang.org.
+For more info see https://github.com/JuliaLinearAlgebra/Arpack.jl/issues/5.
+"""))
+end
 
 using LinearAlgebra: BlasFloat, BlasInt, Diagonal, I, SVD, UniformScaling,
                      checksquare, factorize,ishermitian, issymmetric, mul!,
