@@ -7,8 +7,10 @@ Arnoldi and Lanczos iteration for computing eigenvalues
 """
 module Arpack
 
-if isfile("../deps/deps.jl")
-    include("../deps/deps.jl")
+const depsfile = joinpath(@__DIR__, "..", "deps", "deps.jl")
+
+if isfile(depsfile)
+    include(depsfile)
 else
     throw(ErrorException("""
 No deps.jl file could be found. Please try running Pkg.build("Arpack").
