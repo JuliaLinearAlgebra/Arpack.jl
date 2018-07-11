@@ -328,10 +328,14 @@ function _svds(X; nsv::Int = 6, ritzvec::Bool = true, tol::Float64 = 0.0, maxite
         # left_sv  = sqrt(2) * ex[2][ 1:size(X,1),     ind ] .* sign.(ex[1][ind]')
         if size(X, 1) >= size(X, 2)
             V = ex[2]
-            U = Array(qr(rmul!(X*V, Diagonal(inv.(svals)))).Q)
+            # We cannot assume that X*V is a Matrix even though V is. This is not
+            # the case for e.g. LinearMaps.jl so we convert to Matrix explicitly
+            U = Array(qr(rmul!(convert(Matrix, X*V), Diagonal(inv.(svals)))).Q)
         else
             U = ex[2]
-            V = Array(qr(rmul!(X'U, Diagonal(inv.(svals)))).Q)
+            # We cannot assume that X'U is a Matrix even though U is. This is not
+            # the case for e.g. LinearMaps.jl so we convert to Matrix explicitly
+            V = Array(qr(rmul!(convert(Matrix, X'U), Diagonal(inv.(svals)))).Q)
         end
 
         # right_sv = sqrt(2) * ex[2][ size(X,1)+1:end, ind ]
