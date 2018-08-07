@@ -349,6 +349,4 @@ function _svds(X; nsv::Int = 6, ritzvec::Bool = true, tol::Float64 = 0.0, maxite
     end
 end
 
-include("deprecated.jl")
-
 end # module
