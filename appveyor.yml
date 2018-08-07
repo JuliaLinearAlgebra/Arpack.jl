@@ -4,8 +4,8 @@ environment:
   - julia_version: latest
 
 platform:
-  - x86
-  - x64
+  - x86 # 32-bit
+  - x64 # 64-bit
 
 ## uncomment the following lines to allow failures on nightly julia
 ## (tests will run but not make your overall status red)
@@ -15,7 +15,8 @@ platform:
 
 branches:
   only:
-    - /version-.*/
+    - master
+    - /release-.*/
 
 notifications:
   - provider: Email
@@ -24,13 +25,7 @@ notifications:
     on_build_status_changed: false
 
 install:
-  - ps: |
-      if (Test-Path env:APPVEYOR_PULL_REQUEST_HEAD_COMMIT) {
-          $ref = $env:APPVEYOR_PULL_REQUEST_HEAD_COMMIT
-      } else {
-          $ref = $env:APPVEYOR_REPO_BRANCH
-      }
-      iex ((new-object net.webclient).DownloadString("https://raw.githubusercontent.com/JuliaCI/Appveyor.jl/$ref/bin/install.ps1"))
+  - ps: iex ((new-object net.webclient).DownloadString("https://raw.githubusercontent.com/JuliaCI/Appveyor.jl/version-1/bin/install.ps1"))
 
 build_script:
   - echo "%JL_BUILD_SCRIPT%"
