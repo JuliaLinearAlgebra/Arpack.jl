@@ -147,8 +147,6 @@ function LinearAlgebra.mul!(rho2::StridedVector{T},Phi::CPM{T},rho::StridedVecto
     end
     return copyto!(rho2,rho1)
 end
-LinearAlgebra.A_mul_B!(rho2::StridedVector{T},Phi::CPM{T},rho::StridedVector{T}) where {T<:LinearAlgebra.BlasFloat} = LinearAlgebra.mul!(rho2, Phi, rho)
-# after the A_mul_B! deprecation, remove this A_mul_B! def
 
 let
     # Generate random isometry
