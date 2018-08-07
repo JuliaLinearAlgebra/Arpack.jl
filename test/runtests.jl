@@ -4,7 +4,7 @@ using Arpack
 using Test, LinearAlgebra, SparseArrays, Random
 
 @testset "eigs" begin
-    srand(1234)
+    Random.seed!(1234)
     n = 10
     areal  = sprandn(n,n,0.4)
     breal  = sprandn(n,n,0.4)
@@ -96,7 +96,7 @@ using Test, LinearAlgebra, SparseArrays, Random
     end
 
     @testset "Symmetric generalized with singular B" begin
-        srand(127)
+        Random.seed!(127)
         n = 10
         k = 3
         A = randn(n,n); A = A'A
