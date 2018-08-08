@@ -9,7 +9,7 @@ module Arpack
 
 # To make Pkg aware that this dependency
 # will be injected by BinaryProvider. 
-using Libdl # make sure this gets 
+using Libdl
 
 const depsfile = joinpath(@__DIR__, "..", "deps", "deps.jl")
 
