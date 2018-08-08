@@ -7,6 +7,10 @@ Arnoldi and Lanczos iteration for computing eigenvalues
 """
 module Arpack
 
+# To make Pkg aware that this dependency
+# will be injected by BinaryProvider. 
+using Libdl
+
 const depsfile = joinpath(@__DIR__, "..", "deps", "deps.jl")
 
 if isfile(depsfile)
