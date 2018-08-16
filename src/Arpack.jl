@@ -8,7 +8,7 @@ Arnoldi and Lanczos iteration for computing eigenvalues
 module Arpack
 
 # To make Pkg aware that this dependency
-# will be injected by BinaryProvider. 
+# will be injected by BinaryProvider.
 using Libdl
 
 const depsfile = joinpath(@__DIR__, "..", "deps", "deps.jl")
@@ -326,7 +326,7 @@ function _svds(X; nsv::Int = 6, ritzvec::Bool = true, tol::Float64 = 0.0, maxite
     # ind   = [1:2:ncv;]
     # sval  = abs.(ex[1][ind])
 
-    svals = sqrt.(real.(ex[1]))
+    svals = sqrt.(max.(zero(real(otype)), real.(ex[1])))
     if ritzvec
         # calculating singular vectors
         # left_sv  = sqrt(2) * ex[2][ 1:size(X,1),     ind ] .* sign.(ex[1][ind]')

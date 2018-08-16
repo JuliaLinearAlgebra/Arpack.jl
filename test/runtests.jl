@@ -241,6 +241,14 @@ end
             end
         end
     end
+
+    @testset "Matrices with rank strictly smaller than nsv" for r in [2, 5, 10]
+        m, n = 3*r, 4*r
+        A = randn(Float64, m, r)
+        B = randn(Float64, r, n)
+        C = A*B
+        F = svds(C, nsv=2*r)
+    end
 end
 
 @testset "complex svds" begin
@@ -269,6 +277,14 @@ end
     @test_throws ArgumentError svds(A,nsv=0)
     @test_throws ArgumentError svds(A,nsv=20)
     @test_throws DimensionMismatch svds(A,nsv=2,v0=complex(rand(size(A,2)+1)))
+
+    @testset "Matrices with rank strictly smaller than nsv" for r in [2, 5, 10]
+        m, n = 3*r, 4*r
+        A = randn(Complex{Float64}, m, r)
+        B = randn(Complex{Float64}, r, n)
+        C = A*B
+        F = svds(C, nsv=2*r)
+    end
 end
 
 @testset "promotion" begin
