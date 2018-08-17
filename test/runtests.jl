@@ -298,14 +298,20 @@ end
     @testset "$T coefficients" for T in [Float64, Complex{Float64}]
         @testset "rank $r" for r in [2, 5, 10]
             m, n = 3*r, 4*r
-            A = randn(T, m, r)
-            B = randn(T, r, n)
-            C = A*B
-            F = svds(C, nsv=2*r)
-            @test length(F[1].S) == 2*r
-            @test all(size(F[1].U) .== (m, 2*r))
-            @test all(size(F[1].V) .== (n, 2*r))
-            @test all(size(F[1].Vt) .== (2*r, n))
+            nsv = 2*r
+
+            FU = qr(randn(T, m, r))
+            U = Matrix(FU.Q)
+            S = 0.1 .+ sort(rand(r), rev=true)
+            FV = qr(randn(T, n, r))
+            V = Matrix(FV.Q)
+
+            A = U*Diagonal(S)*V'
+            F = svds(A, nsv=nsv)[1]
+
+            @test F.S[1:r] ≈ S
+            @test F.U'*F.U ≈ Matrix{Float64}(I, nsv, nsv)
+            @test F.V'*F.V ≈ Matrix{Float64}(I, nsv, nsv)
         end
     end
 end
