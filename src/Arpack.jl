@@ -8,7 +8,7 @@ Arnoldi and Lanczos iteration for computing eigenvalues
 module Arpack
 
 # To make Pkg aware that this dependency
-# will be injected by BinaryProvider. 
+# will be injected by BinaryProvider.
 using Libdl
 
 const depsfile = joinpath(@__DIR__, "..", "deps", "deps.jl")
@@ -326,7 +326,13 @@ function _svds(X; nsv::Int = 6, ritzvec::Bool = true, tol::Float64 = 0.0, maxite
     # ind   = [1:2:ncv;]
     # sval  = abs.(ex[1][ind])
 
-    svals = sqrt.(real.(ex[1]))
+    realex1 = real.(ex[1])
+    threshold = max(eps(real(otype))*realex1[1], eps(real(otype)))
+    firstzero = findfirst(v -> v <= threshold, realex1)
+    r = firstzero === nothing ? nsv : firstzero-1 # rank of the decomposition
+    realex1[r+1:end] .= zero(real(otype))
+    svals = sqrt.(realex1)
+
     if ritzvec
         # calculating singular vectors
         # left_sv  = sqrt(2) * ex[2][ 1:size(X,1),     ind ] .* sign.(ex[1][ind]')
@@ -334,12 +340,12 @@ function _svds(X; nsv::Int = 6, ritzvec::Bool = true, tol::Float64 = 0.0, maxite
             V = ex[2]
             # We cannot assume that X*V is a Matrix even though V is. This is not
             # the case for e.g. LinearMaps.jl so we convert to Matrix explicitly
-            U = Array(qr(rmul!(convert(Matrix, X*V), Diagonal(inv.(svals)))).Q)
+            U = Array(qr(rmul!(convert(Matrix, X*V), Diagonal([inv.(svals[1:r]); ones(nsv-r)]))).Q)
         else
             U = ex[2]
             # We cannot assume that X'U is a Matrix even though U is. This is not
             # the case for e.g. LinearMaps.jl so we convert to Matrix explicitly
-            V = Array(qr(rmul!(convert(Matrix, X'U), Diagonal(inv.(svals)))).Q)
+            V = Array(qr(rmul!(convert(Matrix, X'U), Diagonal([inv.(svals[1:r]); ones(nsv-r)]))).Q)
         end
 
         # right_sv = sqrt(2) * ex[2][ size(X,1)+1:end, ind ]

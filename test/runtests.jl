@@ -293,3 +293,33 @@ LinearAlgebra.adjoint(A::MyOp) = MyOp(adjoint(A.mat))
     A = MyOp(randn(10, 9))
     @test svds(A, v0 = ones(9))[1].S == svds(A.mat, v0 = ones(9))[1].S
 end
+
+@testset "low rank" begin
+    Random.seed!(123)
+    @testset "$T coefficients" for T in [Float64, Complex{Float64}]
+        @testset "rank $r" for r in [2, 5, 10]
+            m, n = 3*r, 4*r
+            nsv = 2*r
+
+            FU = qr(randn(T, m, r))
+            U = Matrix(FU.Q)
+            S = 0.1 .+ sort(rand(r), rev=true)
+            FV = qr(randn(T, n, r))
+            V = Matrix(FV.Q)
+
+            A = U*Diagonal(S)*V'
+            F = svds(A, nsv=nsv)[1]
+
+            @test F.S[1:r] ≈ S
+            if T == Complex{Float64}
+                # This test fails since ARPACK does not have an Hermitian solver
+                # for the complex case. This problem occurs for U in the "fat"
+                # case. In the "tall" case the same may happen for V instead.
+                @test_broken F.U'*F.U ≈ Matrix{T}(I, nsv, nsv)
+            else
+                @test F.U'*F.U ≈ Matrix{T}(I, nsv, nsv)
+            end
+            @test F.V'*F.V ≈ Matrix{T}(I, nsv, nsv)
+        end
+    end
+end
