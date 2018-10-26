@@ -312,7 +312,7 @@ julia> s.S
 svds(A; kwargs...) = _svds(A; kwargs...)
 function _orth!(P)
     Q,R = qr!(P)
-    return Matrix(Q) * Diagonal(sign.(diag(R)))
+    return Matrix(Q) * Diagonal(flipsign.(one(eltype(R)),diag(R)))
 end
 function _svds(X; nsv::Int = 6, ritzvec::Bool = true, tol::Float64 = 0.0, maxiter::Int = 1000, ncv::Int = 2*nsv, v0::Vector=zeros(eltype(X),(0,)))
     if nsv < 1
