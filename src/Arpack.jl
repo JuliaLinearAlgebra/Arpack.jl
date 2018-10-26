@@ -25,8 +25,8 @@ For more info see https://github.com/JuliaLinearAlgebra/Arpack.jl/issues/5.
 end
 
 using LinearAlgebra: BlasFloat, BlasInt, Diagonal, I, SVD, UniformScaling,
-                     checksquare, factorize,ishermitian, issymmetric, mul!,
-                     rmul!, qr
+                     checksquare, factorize, ishermitian, issymmetric, mul!,
+                     rmul!, qr!, diag
 import LinearAlgebra
 
 export eigs, svds
@@ -310,6 +310,10 @@ julia> s.S
     that the size is smallest.
 """
 svds(A; kwargs...) = _svds(A; kwargs...)
+function _orth!(Q)
+    Q,R = qr!(Q)
+    return Matrix(Q) * Diagonal(sign.(diag(R)))
+end
 function _svds(X; nsv::Int = 6, ritzvec::Bool = true, tol::Float64 = 0.0, maxiter::Int = 1000, ncv::Int = 2*nsv, v0::Vector=zeros(eltype(X),(0,)))
     if nsv < 1
         throw(ArgumentError("number of singular values (nsv) must be ≥ 1, got $nsv"))
@@ -340,12 +344,12 @@ function _svds(X; nsv::Int = 6, ritzvec::Bool = true, tol::Float64 = 0.0, maxite
             V = ex[2]
             # We cannot assume that X*V is a Matrix even though V is. This is not
             # the case for e.g. LinearMaps.jl so we convert to Matrix explicitly
-            U = Array(qr(rmul!(convert(Matrix, X*V), Diagonal([inv.(svals[1:r]); ones(nsv-r)]))).Q)
+            U = _orth!(rmul!(convert(Matrix, X*V), Diagonal([inv.(svals[1:r]); ones(nsv-r)])))
         else
             U = ex[2]
             # We cannot assume that X'U is a Matrix even though U is. This is not
             # the case for e.g. LinearMaps.jl so we convert to Matrix explicitly
-            V = Array(qr(rmul!(convert(Matrix, X'U), Diagonal([inv.(svals[1:r]); ones(nsv-r)]))).Q)
+            V = _orth!(rmul!(convert(Matrix, X'U), Diagonal([inv.(svals[1:r]); ones(nsv-r)])))
         end
 
         # right_sv = sqrt(2) * ex[2][ size(X,1)+1:end, ind ]
