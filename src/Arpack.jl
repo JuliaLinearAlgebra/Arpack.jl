@@ -310,8 +310,8 @@ julia> s.S
     that the size is smallest.
 """
 svds(A; kwargs...) = _svds(A; kwargs...)
-function _orth!(Q)
-    Q,R = qr!(Q)
+function _orth!(P)
+    Q,R = qr!(P)
     return Matrix(Q) * Diagonal(sign.(diag(R)))
 end
 function _svds(X; nsv::Int = 6, ritzvec::Bool = true, tol::Float64 = 0.0, maxiter::Int = 1000, ncv::Int = 2*nsv, v0::Vector=zeros(eltype(X),(0,)))
