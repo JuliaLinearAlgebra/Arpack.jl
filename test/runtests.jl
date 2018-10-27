@@ -323,3 +323,13 @@ end
         end
     end
 end
+
+
+# Problematic examples from #41
+@test all(Matrix(svds([1. 0.; 0. 0.],nsv=1)[1]) ≈ [1. 0.; 0. 0.] for i in 1:10)
+let A = [1. 0. 0.; 0. 0. 0.; 0. 0. 0.]
+    U,s,V = svds(A,nsv=2)[1]
+    @test U*Diagonal(s)*V' ≈ A atol=1e-7
+    @test U'U ≈ I
+    @test V'V ≈ I
+end
