@@ -26,7 +26,7 @@ end
 
 using LinearAlgebra: BlasFloat, BlasInt, Diagonal, I, SVD, UniformScaling,
                      checksquare, factorize, ishermitian, issymmetric, mul!,
-                     rmul!, qr!, diag
+                     rmul!, qr!
 import LinearAlgebra
 
 export eigs, svds
