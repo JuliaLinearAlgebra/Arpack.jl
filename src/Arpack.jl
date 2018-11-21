@@ -286,23 +286,47 @@ iterations derived from [`eigs`](@ref).
 
 * `svd`: An `SVD` object containing the left singular vectors, the requested values, and the
   right singular vectors. If `ritzvec = false`, the left and right singular vectors will be
-  empty.
+  empty. `U`, `S`, `V` and `Vt` can be obtained from the SVD object with `Z.U`, `Z.S`, `Z.V`
+  and `Z.Vt`, where `Z = svds(A)[1]` and `U * Diagonal(S) * Vt` is a low-rank approximation
+  of `A` with rank `nsv`. Internally `Vt` is stored and hence `Vt` is more efficient to extract than `V`.
 * `nconv`: Number of converged singular values.
 * `niter`: Number of iterations.
 * `nmult`: Number of matrix--vector products used.
 * `resid`: Final residual vector.
 
 # Examples
-```jldoctest; filter = r"2-element Array{Float64,1}:\\n.*\\n.*"
-julia> A = Diagonal(1:4);
 
-julia> s = svds(A, nsv = 2)[1];
+```jldoctest
+julia> A = Diagonal(1:5);
 
-julia> s.S
+julia> Z = svds(A, nsv = 2)[1];
+
+julia> Z.U
+5×2 Array{Float64,2}:
+ -0.0           1.38778e-17
+ -0.0          -0.0
+ -6.66134e-17   1.66533e-16
+ -1.1354e-16    1.0
+ -1.0          -1.1354e-16
+
+julia> Z.S
 2-element Array{Float64,1}:
+ 5.0
  4.0
- 2.9999999999999996
-```
+
+julia> Z.Vt
+2×5 Array{Float64,2}:
+ 0.0          0.0  -1.11022e-16  -1.41925e-16  -1.0
+ 5.55112e-17  0.0   2.22045e-16   1.0          -1.52656e-16
+
+julia> Z.V
+5×2 Adjoint{Float64,Array{Float64,2}}:
+  0.0           5.55112e-17
+  0.0           0.0
+ -1.11022e-16   2.22045e-16
+ -1.41925e-16   1.0
+ -1.0          -1.52656e-16
+ ```
 
 !!! note "Implementation"
     `svds(A)` is formally equivalent to calling [`eigs`](@ref) to perform implicitly restarted
