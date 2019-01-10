@@ -132,7 +132,7 @@ if unsatisfied || !isinstalled(dl_info...; prefix=prefix)
         We will attempt to automatically map the distribution-provided BLAS library to such
         that libarpack can find it, but this may not work.  If issues with Arpack.jl persist,
         we recommend using the Julia binaries available for download from the official website
-        at https://julialang.org/downloads.html
+        at https://julialang.org/downloads/
         """, '\n' => ' ')))
 
         @warn(strip(replace(
