@@ -1,4 +1,7 @@
-using BinaryProvider # requires BinaryProvider 0.3.0 or later
+using BinaryProvider, Libdl
+
+## NOTE: This is not a typical build.jl file; it has extra stuff toward the bottom.
+## Don't just replace this file with the output of a BinaryBuilder repository!
 
 # Parse some basic command-line arguments
 const verbose = "--verbose" in ARGS
@@ -53,6 +56,50 @@ download_info = Dict(
     Windows(:x86_64, compiler_abi=CompilerABI(:gcc8)) => ("$bin_prefix/Arpack.v3.5.0-3.x86_64-w64-mingw32-gcc8.tar.gz", "1fc0035e5bd62448243f8ed09041dee6a2480ea23e648c47b9d56d1f467a0ca0"),
 )
 
+
+# Regenerate this with `get_default_blaslib_names.jl`
+default_blaslib_names = Dict(
+    Linux(:i686, libc=:musl, compiler_abi=CompilerABI(:gcc8)) => "libopenblas.so.0",
+    Linux(:x86_64, libc=:musl, compiler_abi=CompilerABI(:gcc4)) => "libopenblas64_.so.0",
+    Windows(:i686, compiler_abi=CompilerABI(:gcc7)) => "libopenblas.dll",
+    MacOS(:x86_64, compiler_abi=CompilerABI(:gcc7)) => "libopenblas64_.dylib",
+    MacOS(:x86_64, compiler_abi=CompilerABI(:gcc8)) => "libopenblas64_.dylib",
+    Linux(:armv7l, libc=:glibc, call_abi=:eabihf, compiler_abi=CompilerABI(:gcc8)) => "libopenblas.so.0",
+    Linux(:x86_64, libc=:glibc, compiler_abi=CompilerABI(:gcc7)) => "libopenblas64_.so.0",
+    Linux(:armv7l, libc=:musl, call_abi=:eabihf, compiler_abi=CompilerABI(:gcc7)) => "libopenblas.so.0",
+    Linux(:armv7l, libc=:musl, call_abi=:eabihf, compiler_abi=CompilerABI(:gcc8)) => "libopenblas.so.0",
+    Linux(:x86_64, libc=:glibc, compiler_abi=CompilerABI(:gcc8)) => "libopenblas64_.so.0",
+    FreeBSD(:x86_64, compiler_abi=CompilerABI(:gcc7)) => "libopenblas64_.so",
+    Linux(:x86_64, libc=:glibc, compiler_abi=CompilerABI(:gcc4)) => "libopenblas64_.so.0",
+    FreeBSD(:x86_64, compiler_abi=CompilerABI(:gcc8)) => "libopenblas64_.so",
+    Windows(:x86_64, compiler_abi=CompilerABI(:gcc4)) => "libopenblas64_.dll",
+    Windows(:x86_64, compiler_abi=CompilerABI(:gcc8)) => "libopenblas64_.dll",
+    Windows(:i686, compiler_abi=CompilerABI(:gcc4)) => "libopenblas.dll",
+    Linux(:x86_64, libc=:musl, compiler_abi=CompilerABI(:gcc8)) => "libopenblas64_.so.0",
+    MacOS(:x86_64, compiler_abi=CompilerABI(:gcc4)) => "libopenblas64_.dylib",
+    Linux(:i686, libc=:musl, compiler_abi=CompilerABI(:gcc7)) => "libopenblas.so.0",
+    Linux(:armv7l, libc=:glibc, call_abi=:eabihf, compiler_abi=CompilerABI(:gcc7)) => "libopenblas.so.0",
+    Linux(:aarch64, libc=:musl, compiler_abi=CompilerABI(:gcc4)) => "libopenblas64_.so.0",
+    Linux(:powerpc64le, libc=:glibc, compiler_abi=CompilerABI(:gcc7)) => "libopenblas64_.so.0",
+    Linux(:i686, libc=:glibc, compiler_abi=CompilerABI(:gcc7)) => "libopenblas.so.0",
+    Linux(:aarch64, libc=:glibc, compiler_abi=CompilerABI(:gcc8)) => "libopenblas64_.so.0",
+    Linux(:armv7l, libc=:musl, call_abi=:eabihf, compiler_abi=CompilerABI(:gcc4)) => "libopenblas.so.0",
+    Linux(:i686, libc=:glibc, compiler_abi=CompilerABI(:gcc4)) => "libopenblas.so.0",
+    Windows(:i686, compiler_abi=CompilerABI(:gcc8)) => "libopenblas.dll",
+    Linux(:aarch64, libc=:glibc, compiler_abi=CompilerABI(:gcc7)) => "libopenblas64_.so.0",
+    Linux(:armv7l, libc=:glibc, call_abi=:eabihf, compiler_abi=CompilerABI(:gcc4)) => "libopenblas.so.0",
+    Linux(:powerpc64le, libc=:glibc, compiler_abi=CompilerABI(:gcc4)) => "libopenblas64_.so.0",
+    Linux(:aarch64, libc=:glibc, compiler_abi=CompilerABI(:gcc4)) => "libopenblas64_.so.0",
+    FreeBSD(:x86_64, compiler_abi=CompilerABI(:gcc4)) => "libopenblas64_.so",
+    Linux(:powerpc64le, libc=:glibc, compiler_abi=CompilerABI(:gcc8)) => "libopenblas64_.so.0",
+    Linux(:i686, libc=:glibc, compiler_abi=CompilerABI(:gcc8)) => "libopenblas.so.0",
+    Linux(:aarch64, libc=:musl, compiler_abi=CompilerABI(:gcc8)) => "libopenblas64_.so.0",
+    Linux(:x86_64, libc=:musl, compiler_abi=CompilerABI(:gcc7)) => "libopenblas64_.so.0",
+    Windows(:x86_64, compiler_abi=CompilerABI(:gcc7)) => "libopenblas64_.dll",
+    Linux(:i686, libc=:musl, compiler_abi=CompilerABI(:gcc4)) => "libopenblas.so.0",
+    Linux(:aarch64, libc=:musl, compiler_abi=CompilerABI(:gcc7)) => "libopenblas64_.so.0",
+)
+
 # Install unsatisfied or updated dependencies:
 unsatisfied = any(!satisfied(p; verbose=verbose) for p in products)
 dl_info = choose_download(download_info, platform_key_abi())
@@ -68,6 +115,33 @@ end
 if unsatisfied || !isinstalled(dl_info...; prefix=prefix)
     # Download and install binaries
     install(dl_info...; prefix=prefix, force=true, verbose=verbose)
+
+    # Distribution packagers love to rename their BLAS libraries, which is naturally
+    # incompatible with precompiled binaries.  We attempt to address this by automatically
+    # creating a symlink to the currently loaded BLAS library that is named what ARPACK is
+    # attempting to load.
+    blaslib = first(filter(x -> occursin(Base.libblas_name, x), dllist()))
+    default_blaslib_name = choose_download(default_blaslib_names, platform_key_abi())
+    if basename(blaslib) != default_blaslib_name && !isfile(joinpath(dirname(blaslib), default_blaslib_name))
+        sym_file = joinpath(abspath(joinpath(Sys.BINDIR, Base.LIBDIR)), default_blaslib_name)
+        @warn(strip(replace(
+        """
+        This Julia installation uses a non-default BLAS library name (\"$(basename(blaslib))\"
+        instead of \"$(default_blaslib_name)\")!  This is likely due to using a distribution
+        package, and can cause problems when installing binary dependencies such as Arpack.jl.
+        We will attempt to automatically map the distribution-provided BLAS library to such
+        that libarpack can find it, but this may not work.  If issues with Arpack.jl persist,
+        we recommend using the Julia binaries available for download from the official website
+        at https://julialang.org/downloads.html
+        """, '\n' => ' ')))
+
+        @warn(strip(replace(
+        """
+        Attempting to symlink \"$(sym_file)\" => \"$(blaslib)\"; if this fails, try running it
+        manually with super user permissions via: sudod ln -s $(blaslib) $(sym_file)
+        """, '\n' => ' ')))
+        symlink(blaslib, sym_file)
+    end
 end
 
 # Write out a deps.jl file that will contain mappings for our products
