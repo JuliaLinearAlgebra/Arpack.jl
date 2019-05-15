@@ -7,6 +7,18 @@
 [![][docs-stable-img]][docs-stable-url]
 [![][docs-latest-img]][docs-latest-url]
 
+If you get
+```
+ERROR: LoadError: LibraryProduct(nothing, ["libarpack"], :libarpack, "Prefix(~/.julia/packages/Arpack/cu5By/deps/usr)") is not satisfied, cannot generate deps.jl!
+```
+when building Arpack, download the source of the [v3.5.0 of arpack-ng](https://github.com/opencollab/arpack-ng/releases/tag/3.5.0),
+extract it in some `<directory>`, build it and do
+```
+$ cp <directory>/arpack-ng-3.5.0/SRC/.libs/libarpack.so.2.0.0 ~/.julia/packages/Arpack/cu5By/deps/usr/lib/
+$ julia -e 'import Pkg; Pkg.build("Arpack")'
+  Building Arpack → `~/.julia/packages/Arpack/UiiMc/deps/build.log`
+```
+
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-latest-url]: http://JuliaLinearAlgebra.github.io/Arpack.jl/latest/
 
