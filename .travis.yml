@@ -12,6 +12,17 @@ notifications:
 git:
   depth: 99999999
 
+arch:
+  - amd64
+  - arm64
+
+matrix:
+  allow_failures:
+    - arch: arm64
+
+jobs:
+  fast_finish: true
+
 after_success:
   # push coverage results to Coveralls and Codecov
   - julia -e 'cd(Pkg.dir("Arpack")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder()); Codecov.submit(Codecov.process_folder())'
