@@ -1,6 +1,9 @@
 # This file is a part of Julia. License is MIT: https://julialang.org/license
 
 import LinearAlgebra: BlasInt
+
+# A convenient shortcut to show unexpected behavior from libarpack
+ERR_UNEXPECTED_BEHAVIOR = -999
 @static if isdefined(LinearAlgebra, :ARPACKException)
     import LinearAlgebra: ARPACKException
 else
@@ -18,6 +21,8 @@ else
             print(io, string("did not find any eigenvalues to sufficient accuracy. ",
                 "Try with a different starting vector or more Lanczos vectors ",
                 "by increasing the value of ncv."))
+        elseif ex.info == -999
+            print(io, "Unexepcted behavior")
         else
             print(io, "unspecified ARPACK error: $(ex.info)")
         end
@@ -79,7 +84,7 @@ function aupd_wrapper(T, matvecA!::Function, matvecB::Function, solveSI::Functio
             elseif ido[] == 99
                 break
             else
-                throw(ARPACKException("unexpected behavior"))
+                throw(ARPACKException(ERR_UNEXPECTED_BEHAVIOR))
             end
         elseif mode == 3 && bmat == "I" # corresponds to dsdrv2, dndrv2 or zndrv2
             if ido[] == -1 || ido[] == 1
@@ -87,7 +92,7 @@ function aupd_wrapper(T, matvecA!::Function, matvecB::Function, solveSI::Functio
             elseif ido[] == 99
                 break
             else
-                throw(ARPACKException("unexpected behavior"))
+                throw(ARPACKException(ERR_UNEXPECTED_BEHAVIOR))
             end
         elseif mode == 2 # corresponds to dsdrv3, dndrv3 or zndrv3
             if ido[] == -1 || ido[] == 1
@@ -101,7 +106,7 @@ function aupd_wrapper(T, matvecA!::Function, matvecB::Function, solveSI::Functio
             elseif ido[] == 99
                 break
             else
-                throw(ARPACKException("unexpected behavior"))
+                throw(ARPACKException(ERR_UNEXPECTED_BEHAVIOR))
             end
         elseif mode == 3 && bmat == "G" # corresponds to dsdrv4, dndrv4 or zndrv4
             if ido[] == -1
@@ -113,7 +118,7 @@ function aupd_wrapper(T, matvecA!::Function, matvecB::Function, solveSI::Functio
             elseif ido[] == 99
                 break
             else
-                throw(ARPACKException("unexpected behavior"))
+                throw(ARPACKException(ERR_UNEXPECTED_BEHAVIOR))
             end
         else
             throw(ArgumentError("ARPACK mode ($mode) not yet supported"))
@@ -201,7 +206,7 @@ function eupd_wrapper(T, n::Integer, sym::Bool, cmplx::Bool, bmat::String,
                 evec[:,j] = v[:,j]
                 j += 1
             else
-                throw(ARPACKException("unexpected behavior"))
+                throw(ARPACKException(ERR_UNEXPECTED_BEHAVIOR))
             end
         end
 

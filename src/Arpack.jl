@@ -1,28 +1,11 @@
 # This file is a part of Julia. License is MIT: https://julialang.org/license
-
-__precompile__(true)
-
 """
 Arnoldi and Lanczos iteration for computing eigenvalues
 """
 module Arpack
 
-# To make Pkg aware that this dependency
-# will be injected by BinaryProvider.
-using Libdl
-
-const depsfile = joinpath(@__DIR__, "..", "deps", "deps.jl")
-
-if isfile(depsfile)
-    include(depsfile)
-else
-    throw(ErrorException("""
-No deps.jl file could be found. Please try running Pkg.build("Arpack").
-Currently, the build command might fail when Julia has been built from source
-and the recommendation is to use the official binaries from julialang.org.
-For more info see https://github.com/JuliaLinearAlgebra/Arpack.jl/issues/5.
-"""))
-end
+# Load in our binary dependencies
+using Arpack_jll
 
 using LinearAlgebra: BlasFloat, BlasInt, Diagonal, I, SVD, UniformScaling,
                      checksquare, factorize, ishermitian, issymmetric, mul!,
