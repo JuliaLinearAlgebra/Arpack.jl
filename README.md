@@ -45,3 +45,9 @@ $ julia -e 'import Pkg; Pkg.build("Arpack")'
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: http://JuliaLinearAlgebra.github.io/Arpack.jl/stable/
+
+As posted [here](https://discourse.julialang.org/t/resolved-arpack-deps-jl-linux-build-issue/30923) for Deb linux releases there is a less intrusive resolution that only requires symlinking to the distribution library of openblas. For Ubuntu flavours:
+
+```
+$ sudo ln -s /usr/lib/x86_64-linux-gnu/libopenblas.so /usr/lib/libopenblas64_.so.0
+```
