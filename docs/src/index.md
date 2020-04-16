@@ -8,9 +8,11 @@ This package provides bindings to [ARPACK](http://www.caam.rice.edu/software/ARP
 can be used to perform iterative solutions for eigensystems (using [`eigs`](@ref))
 or singular value decompositions (using [`svds`](@ref)).
 
-`eigs` calculates the eigenvalues and, optionally, eigenvectors of its input(s)
+`eigs` calculates the eigenvalues and, optionally, eigenvectors of a matrix
 using implicitly restarted Lanczos or Arnoldi iterations for real symmetric or
-general nonsymmetric matrices respectively.
+general nonsymmetric matrices respectively.  The input matrix `A` can be any 
+structured `AbstractMatrix` that implements the in-place product 
+method `LinearAlgebra.mul!(y, A, x)`.
 
 For the single matrix version,
 
