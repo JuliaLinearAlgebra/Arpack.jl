@@ -107,7 +107,7 @@ julia> λ
     | `sigma`         | iteration mode                   | `which` refers to eigenvalues of |
     |:----------------|:---------------------------------|:---------------------------------|
     | `nothing`       | ordinary (forward)               | ``A``                            |
-    | real or complex | inverse with level shift `sigma` | ``(A - \\sigma I )^{-1}``        |
+    | real or complex | inverse with level shift `sigma` | ``(A - \sigma I )^{-1}``        |
 
 !!! note
     Although `tol` has a default value, the best choice depends strongly on the
@@ -190,13 +190,13 @@ julia> λ
 
 !!! note
     The `sigma` and `which` keywords interact: the description of eigenvalues searched for by
-    `which` do *not* necessarily refer to the eigenvalue problem ``Av = Bv\\lambda``, but rather
+    `which` do *not* necessarily refer to the eigenvalue problem ``Av = Bv\lambda``, but rather
     the linear operator constructed by the specification of the iteration mode implied by `sigma`.
 
     | `sigma`         | iteration mode                   | `which` refers to the problem      |
     |:----------------|:---------------------------------|:-----------------------------------|
-    | `nothing`       | ordinary (forward)               | ``Av = Bv\\lambda``                |
-    | real or complex | inverse with level shift `sigma` | ``(A - \\sigma B )^{-1}B = v\\nu`` |
+    | `nothing`       | ordinary (forward)               | ``Av = Bv\lambda``                |
+    | real or complex | inverse with level shift `sigma` | ``(A - \sigma B )^{-1}B = v\nu`` |
 
 
 ```@docs
