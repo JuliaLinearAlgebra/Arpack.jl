@@ -327,8 +327,8 @@ function _svds(X; nsv::Int = 6, ritzvec::Bool = true, tol::Float64 = 0.0, maxite
     if nsv < 1
         throw(ArgumentError("number of singular values (nsv) must be ≥ 1, got $nsv"))
     end
-    if nsv > minimum(size(X))
-        throw(ArgumentError("number of singular values (nsv) must be ≤ $(minimum(size(X))), got $nsv"))
+    if nsv >= minimum(size(X))
+        throw(ArgumentError("number of singular values (nsv) must be < $(minimum(size(X))), got $nsv"))
     end
     m, n = size(X)
     otype = eltype(X)
