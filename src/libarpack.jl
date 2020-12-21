@@ -1,39 +1,55 @@
-# This file is a part of Julia. License is MIT: https://julialang.org/license
+# This file is a part of Julia. License is MIT: https://julialang.org/licenOAse
 
 import LinearAlgebra: BlasInt
+using Logging
 
 # A convenient shortcut to show unexpected behavior from libarpack
-ERR_UNEXPECTED_BEHAVIOR = -999
-@static if isdefined(LinearAlgebra, :ARPACKException)
-    import LinearAlgebra: ARPACKException
-else
-    struct ARPACKException <: Exception
-        info::BlasInt
-    end
+const ERR_UNEXPECTED_BEHAVIOR = -999
 
-    function Base.showerror(io::IO, ex::ARPACKException)
-        print(io, "ARPACKException: ")
-        if ex.info == -8
-            print(io, "error return from calculation of a real Schur form.")
-        elseif ex.info == -9
-            print(io, "error return from calculation of eigenvectors.")
-        elseif ex.info == -14
-            print(io, string("did not find any eigenvalues to sufficient accuracy. ",
-                "Try with a different starting vector or more Lanczos vectors ",
-                "by increasing the value of ncv."))
-        elseif ex.info == -999
-            print(io, "Unexepcted behavior")
-        else
-            print(io, "unspecified ARPACK error: $(ex.info)")
-        end
+struct XYAUPD_Exception <: Exception
+    info::BlasInt
+end
+
+function Base.showerror(io::IO, ex::XYAUPD_Exception)
+    info = ex.info
+    if info == -8
+        @error "XYAUPD_Exception: Error return from LAPACK eigenvalue calculation." info
+    elseif info == -9
+        @error "XYAUPD_Exception: Starting vector is zero." info
+    elseif info == -9999
+        @error "XYAUPD_Exception: Could not build an Arnoldi factorization." info
+    elseif info == ERR_UNEXPECTED_BEHAVIOR
+        @error "XYAUPD_Exception: Undefined error"
+    else
+        @error "XYAUPD_Exception: Please check XYAUPD error codes in the ARPACK manual." info
+    end
+end
+
+struct XYEUPD_Exception <: Exception
+    info::BlasInt
+end
+
+function Base.showerror(io::IO, ex::XYEUPD_Exception)
+    info = ex.info
+    if info == -8
+        @error "XYEUPD_Exception: Error return from calculation of a real Schur form." info
+    elseif info == -9
+        @error "XYEUPD_Exception: Error return from calculation of eigenvectors." info
+    elseif info == -14
+        @error "XYEUPD_Exception: Did not find any eigenvalues to sufficient accuracy." info
+        @info "Try with a different starting vector or more Lanczos vectors by increasing the value of ncv."
+    elseif info == ERR_UNEXPECTED_BEHAVIOR
+        @error "XYEUPD_Exception: Undefined error"
+    else
+        @error "XYEUPD_Exception: Please check XYEUPD error codes in the ARPACK manual." info
     end
 end
 
 ## aupd and eupd wrappers
 
 function aupd_wrapper(T, matvecA!::Function, matvecB::Function, solveSI::Function, n::Integer,
-                      sym::Bool, cmplx::Bool, bmat::String,
-                      nev::Integer, ncv::Integer, which::String,
+                      sym::Bool, cmplx::Bool, bmat,
+                      nev::Integer, ncv::Integer, which,
                       tol::Real, maxiter::Integer, mode::Integer, v0::Vector)
     lworkl = cmplx ? ncv * (3*ncv + 5) : (sym ? ncv * (ncv + 8) :  ncv * (3*ncv + 6) )
     TR = cmplx ? T.types[1] : T
@@ -73,18 +89,19 @@ function aupd_wrapper(T, matvecA!::Function, matvecB::Function, solveSI::Functio
                   iparam, ipntr, workd, workl, lworkl, info)
         end
         if info[] != 0
-            throw(ARPACKException(info[]))
+            throw(XYAUPD_Exception(info[]))
         end
 
         x = view(workd, ipntr[1] .+ zernm1)
         y = view(workd, ipntr[2] .+ zernm1)
         if mode == 1  # corresponds to dsdrv1, dndrv1 or zndrv1
-            if ido[] == 1
+            if ido[] == -1 || ido[] == 1
                 matvecA!(y, x)
             elseif ido[] == 99
                 break
             else
-                throw(ARPACKException(ERR_UNEXPECTED_BEHAVIOR))
+                @show ido[]
+                throw(XYAUPD_Exception(ERR_UNEXPECTED_BEHAVIOR))
             end
         elseif mode == 3 && bmat == "I" # corresponds to dsdrv2, dndrv2 or zndrv2
             if ido[] == -1 || ido[] == 1
@@ -92,7 +109,7 @@ function aupd_wrapper(T, matvecA!::Function, matvecB::Function, solveSI::Functio
             elseif ido[] == 99
                 break
             else
-                throw(ARPACKException(ERR_UNEXPECTED_BEHAVIOR))
+                throw(XYAUPD_Exception(ERR_UNEXPECTED_BEHAVIOR))
             end
         elseif mode == 2 # corresponds to dsdrv3, dndrv3 or zndrv3
             if ido[] == -1 || ido[] == 1
@@ -106,7 +123,7 @@ function aupd_wrapper(T, matvecA!::Function, matvecB::Function, solveSI::Functio
             elseif ido[] == 99
                 break
             else
-                throw(ARPACKException(ERR_UNEXPECTED_BEHAVIOR))
+                throw(XYAUPD_Exception(ERR_UNEXPECTED_BEHAVIOR))
             end
         elseif mode == 3 && bmat == "G" # corresponds to dsdrv4, dndrv4 or zndrv4
             if ido[] == -1
@@ -118,7 +135,7 @@ function aupd_wrapper(T, matvecA!::Function, matvecB::Function, solveSI::Functio
             elseif ido[] == 99
                 break
             else
-                throw(ARPACKException(ERR_UNEXPECTED_BEHAVIOR))
+                throw(XYAUPD_Exception(ERR_UNEXPECTED_BEHAVIOR))
             end
         else
             throw(ArgumentError("ARPACK mode ($mode) not yet supported"))
@@ -128,8 +145,8 @@ function aupd_wrapper(T, matvecA!::Function, matvecB::Function, solveSI::Functio
     return (resid, v, n, iparam, ipntr, workd, workl, lworkl, rwork, TOL)
 end
 
-function eupd_wrapper(T, n::Integer, sym::Bool, cmplx::Bool, bmat::String,
-                      nev::Integer, which::String, ritzvec::Bool,
+function eupd_wrapper(T, n::Integer, sym::Bool, cmplx::Bool, bmat,
+                      nev::Integer, which, ritzvec::Bool,
                       TOL::Ref, resid, ncv::Integer, v, ldv, sigma, iparam, ipntr,
                       workd, workl, lworkl, rwork)
     howmny = "A"
@@ -157,7 +174,7 @@ function eupd_wrapper(T, n::Integer, sym::Bool, cmplx::Bool, bmat::String,
               bmat, n, which, nev, TOL, resid, ncv, v, ldv,
               iparam, ipntr, workd, workl, lworkl, rwork, info)
         if info[] != 0
-            throw(ARPACKException(info[]))
+            throw(XYEUPD_Exception(info[]))
         end
 
         p = sortperm(dmap(d[1:nev]), rev=true)
@@ -169,7 +186,7 @@ function eupd_wrapper(T, n::Integer, sym::Bool, cmplx::Bool, bmat::String,
               bmat, n, which, nev, TOL, resid, ncv, v, ldv,
               iparam, ipntr, workd, workl, lworkl, info)
         if info[] != 0
-            throw(ARPACKException(info[]))
+            throw(XYEUPD_Exception(info[]))
         end
 
         p = sortperm(dmap(d), rev=true)
@@ -186,7 +203,7 @@ function eupd_wrapper(T, n::Integer, sym::Bool, cmplx::Bool, bmat::String,
               workev, bmat, n, which, nev, TOL, resid, ncv, v, ldv,
               iparam, ipntr, workd, workl, lworkl, info)
         if info[] != 0
-            throw(ARPACKException(info[]))
+            throw(XYEUPD_Exception(info[]))
         end
         evec = complex.(Matrix{T}(undef, n, nev+1), Matrix{T}(undef, n, nev+1))
 
@@ -206,7 +223,7 @@ function eupd_wrapper(T, n::Integer, sym::Bool, cmplx::Bool, bmat::String,
                 evec[:,j] = v[:,j]
                 j += 1
             else
-                throw(ARPACKException(ERR_UNEXPECTED_BEHAVIOR))
+                throw(XYEUPD_Exception(ERR_UNEXPECTED_BEHAVIOR))
             end
         end
 
@@ -235,7 +252,7 @@ for (T, saupd_name, seupd_name, naupd_name, neupd_name) in
                    Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ref{BlasInt}, Ref{BlasInt}, Clong, Clong),
                   ido, bmat, n, evtype, nev,
                   TOL, resid, ncv, v, ldv,
-                  iparam, ipntr, workd, workl, lworkl, info, sizeof(bmat), sizeof(evtype))
+                  iparam, ipntr, workd, workl, lworkl, info, 1, 2)
         end
 
         function neupd(rvec, howmny, select, dr, di, z, ldz, sigmar, sigmai,
@@ -249,7 +266,7 @@ for (T, saupd_name, seupd_name, naupd_name, neupd_name) in
                   rvec, howmny, select, dr, di, z, ldz,
                   sigmar, sigmai, workev, bmat, n, evtype, nev,
                   TOL, resid, ncv, v, ldv,
-                  iparam, ipntr, workd, workl, lworkl, info, sizeof(howmny), sizeof(bmat), sizeof(evtype))
+                  iparam, ipntr, workd, workl, lworkl, info, 1, 1, 2)
         end
 
         function saupd(ido, bmat, n, which, nev, TOL::Ref{$T}, resid::Vector{$T}, ncv, v::Matrix{$T}, ldv,
@@ -260,7 +277,7 @@ for (T, saupd_name, seupd_name, naupd_name, neupd_name) in
                    Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ref{BlasInt}, Ref{BlasInt}, Clong, Clong),
                   ido, bmat, n, which, nev,
                   TOL, resid, ncv, v, ldv,
-                  iparam, ipntr, workd, workl, lworkl, info, sizeof(bmat), sizeof(which))
+                  iparam, ipntr, workd, workl, lworkl, info, 1, 2)
         end
 
         function seupd(rvec, howmny, select, d, z, ldz, sigma,
@@ -274,7 +291,7 @@ for (T, saupd_name, seupd_name, naupd_name, neupd_name) in
                   rvec, howmny, select, d, z, ldz,
                   sigma, bmat, n, evtype, nev,
                   TOL, resid, ncv, v, ldv,
-                  iparam, ipntr, workd, workl, lworkl, info, sizeof(howmny), sizeof(bmat), sizeof(evtype))
+                  iparam, ipntr, workd, workl, lworkl, info, 1, 1, 2)
         end
     end
 end
@@ -289,10 +306,10 @@ for (T, TR, naupd_name, neupd_name) in
             ccall(($(string(naupd_name)), libarpack), Cvoid,
                   (Ref{BlasInt}, Ptr{UInt8}, Ref{BlasInt}, Ptr{UInt8}, Ref{BlasInt},
                    Ptr{$TR}, Ptr{$T}, Ref{BlasInt}, Ptr{$T}, Ref{BlasInt},
-                   Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ref{BlasInt}, Ptr{$TR}, Ref{BlasInt}),
+                   Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ref{BlasInt}, Ptr{$TR}, Ref{BlasInt}, Clong, Clong),
                   ido, bmat, n, evtype, nev,
                   TOL, resid, ncv, v, ldv,
-                  iparam, ipntr, workd, workl, lworkl, rwork, info)
+                  iparam, ipntr, workd, workl, lworkl, rwork, info, 1, 2)
         end
 
         function neupd(rvec, howmny, select, d, z, ldz, sigma, workev::Vector{$T},
@@ -303,11 +320,11 @@ for (T, TR, naupd_name, neupd_name) in
                   (Ref{BlasInt}, Ptr{UInt8}, Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ref{BlasInt},
                    Ptr{$T}, Ptr{$T}, Ptr{UInt8}, Ref{BlasInt}, Ptr{UInt8}, Ref{BlasInt},
                    Ptr{$TR}, Ptr{$T}, Ref{BlasInt}, Ptr{$T}, Ref{BlasInt},
-                   Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ref{BlasInt}, Ptr{$TR}, Ref{BlasInt}),
+                   Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ref{BlasInt}, Ptr{$TR}, Ref{BlasInt}, Clong, Clong, Clong),
                   rvec, howmny, select, d, z, ldz,
                   sigma, workev, bmat, n, evtype, nev,
                   TOL, resid, ncv, v, ldv,
-                  iparam, ipntr, workd, workl, lworkl, rwork, info)
+                  iparam, ipntr, workd, workl, lworkl, rwork, info, 1, 1, 2)
         end
     end
 end
