@@ -8,6 +8,9 @@ makedocs(
     modules = [Arpack],
     pages = [
         "Home" => "index.md",
+        "eigs" => "eigs.md",
+        "eigs (generalized)" => "eigs_gen.md",
+        "svds" => "svds.md",
         "API" => "api.md",
     ]
 )
