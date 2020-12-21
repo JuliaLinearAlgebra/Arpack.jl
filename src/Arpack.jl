@@ -18,7 +18,7 @@ include("libarpack.jl")
 
 ## eigs
 """
-    eigs(A; nev=6, ncv=max(20,2*nev+1), which=:LM, tol=0.0, maxiter=300, sigma=nothing, ritzvec=true, v0=zeros((0,))) -> (d,[v,],nconv,niter,nmult,resid)
+    eigs(A; nev=6, ncv=max(20,2*nev+1), which=:LM, tol=0.0, maxiter=300, sigma=nothing, ritzvec=true, explicittransform=:auto, v0=zeros((0,))) -> (d,[v,],nconv,niter,nmult,resid)
 
 Computes eigenvalues `d` of `A` using implicitly restarted Lanczos or Arnoldi iterations for real symmetric or
 general nonsymmetric matrices respectively. See [the manual](@ref lib-itereigen) for more information.
@@ -26,7 +26,8 @@ general nonsymmetric matrices respectively. See [the manual](@ref lib-itereigen)
 `eigs` returns the `nev` requested eigenvalues in `d`, the corresponding Ritz vectors `v`
 (only if `ritzvec=true`), the number of converged eigenvalues `nconv`, the number of
 iterations `niter` and the number of matrix vector multiplications `nmult`, as well as the
-final residual vector `resid`.
+final residual vector `resid`. The parameter `explicittransform` takes the values `:auto`, `:none`
+or `:shiftinvert`, specifying if shift and invert should be explicitly invoked in julia code.
 
 # Examples
 ```jldoctest
@@ -67,8 +68,10 @@ eigs(A, B; kwargs...) = _eigs(A, B; kwargs...)
 function _eigs(A, B;
                nev::Integer=6, ncv::Integer=max(20,2*nev+1), which=:LM,
                tol=0.0, maxiter::Integer=300, sigma=nothing, v0::Vector=zeros(eltype(A),(0,)),
-               ritzvec::Bool=true)
+               ritzvec::Bool=true, explicittransform::Symbol=:auto)
     n = checksquare(A)
+
+    eigval_postprocess = false; # If we need to shift-and-invert eigvals as postprocessing
 
     T = eltype(A)
     iscmplx = T <: Complex
@@ -113,10 +116,45 @@ function _eigs(A, B;
         which=:LM
     end
 
+    if (explicittransform==:auto)
+        # Try to automatically detect if it is good to carry out an explicittransform
+        if (isgeneral && (isshift  || which==:LM))
+            explicittransform = :shiftinvert
+        else
+            explicittransform = :none
+        end
+    end
+
     if sigma !== nothing && !iscmplx && isa(sigma,Complex)
         throw(ArgumentError("complex shifts for real problems are not yet supported"))
     end
     sigma = isshift ? convert(T,sigma) : zero(T)
+
+    if (explicittransform==:shiftinvert && (which==:LM || which==:LR || which == :LI) && !isgeneral)
+        @warn "Explicit transformation with :L* for standard eigenvalue problems has no meaning. Changing to explicittransform=false."
+       explicittransform=:none
+    end
+
+    sigma0=sigma; # Store for inverted shift-and-invert
+    if explicittransform==:shiftinvert
+        isgeneral=false
+        bmat="I"
+        sym=false # Explicit transform destroys symmetry in general
+        sigma=zero(T);
+        if (isshift) # Try to keep the original meaning of which & sigma
+            if (which == :LM)
+                which = :SM
+            elseif (which == :SM)
+                which = :LM
+            end
+            if (which == :LR)
+                which = :SR
+            elseif (which == :SR)
+                which = :LR
+            end
+        end
+
+    end
 
     if !isempty(v0)
         if length(v0) != n
@@ -153,16 +191,33 @@ function _eigs(A, B;
     end
 
     # Refer to ex-*.doc files in ARPACK/DOCUMENTS for calling sequence
-    matvecA!(y, x) = mul!(y, A, x)
-    if !isgeneral           # Standard problem
+    matvecA! = (y, x) -> mul!(y, A, x)
+    if !isgeneral || (explicittransform==:shiftinvert)      # Standard problem
         matvecB = x -> x
-        if !isshift         #    Regular mode
-            mode       = 1
-            solveSI = x->x
-        else                #    Shift-invert mode
-            mode       = 3
-            F = factorize(A - UniformScaling(sigma))
-            solveSI = x -> F \ x
+
+        if (explicittransform == :none)
+            if !isshift         #    Regular mode
+                mode       = 1
+                solveSI = x->x
+            else                #    Shift-invert mode
+                mode       = 3
+                F = factorize(A - UniformScaling(sigma))
+                solveSI = x -> F \ x
+            end
+        else
+            # doing explicit transformation to standard eigprob
+            if (which == :LM || which == :LI || which == :LR)
+                eigval_postprocess = false # No eigval postprocess necessary the operator is B^{-1}A
+                F = factorize(B);
+                matvecA! = (y,x) -> (y[:]= F \ (A*x))
+            else
+                eigval_postprocess = true
+                sigma = zero(T);
+                F = factorize(sigma0*B - A);
+                matvecA! = (y,x) -> (y[:]= F \ (B*x))
+            end
+            mode = 1;
+            solveSI = x -> x;
         end
     else                    # Generalized eigenproblem
         matvecB = x -> B * x
@@ -179,16 +234,21 @@ function _eigs(A, B;
 
     # Compute the Ritz values and Ritz vectors
     (resid, v, ldv, iparam, ipntr, workd, workl, lworkl, rwork, TOL) =
-       aupd_wrapper(T, matvecA!, matvecB, solveSI, n, sym, iscmplx, bmat, nev, ncv, whichstr, tol, maxiter, mode, v0)
+        aupd_wrapper(T, matvecA!, matvecB, solveSI, n, sym, iscmplx, bmat, nev, ncv, whichstr, tol, maxiter, mode, v0)
 
     # Postprocessing to get eigenvalues and eigenvectors
     output = eupd_wrapper(T, n, sym, iscmplx, bmat, nev, whichstr, ritzvec, TOL,
-                                 resid, ncv, v, ldv, sigma, iparam, ipntr, workd, workl, lworkl, rwork)
+                          resid, ncv, v, ldv, sigma, iparam, ipntr, workd, workl, lworkl, rwork)
 
     # Issue 10495, 10701: Check that all eigenvalues are converged
     nev = length(output[1])
     nconv = output[ritzvec ? 3 : 2]
     nev ≤ nconv || @warn "Not all wanted Ritz pairs converged. Requested: $nev, converged: $nconv"
+
+    if (eigval_postprocess) # invert the shift-and-inverse
+       λ = sigma0 .- 1 ./output[1];
+       return (λ, output[2:end]...)
+    end
 
     return output
 end
