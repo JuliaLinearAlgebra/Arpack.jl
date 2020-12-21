@@ -31,7 +31,7 @@ or `:shiftinvert`, specifying if shift and invert should be explicitly invoked i
 
 # Examples
 ```jldoctest
-julia> using Arpack
+julia> using LinearAlgebra, Arpack
 
 julia> A = Diagonal(1:4);
 

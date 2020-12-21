@@ -1,4 +1,4 @@
-# [Arpack](@id lib-itereigen)
+# [Arpack.jl](@id lib-itereigen)
 
 ```@meta
 DocTestSetup = :(using Arpack, LinearAlgebra, SparseArrays)
@@ -8,10 +8,13 @@ This package provides bindings to [ARPACK](http://www.caam.rice.edu/software/ARP
 can be used to perform iterative solutions for eigensystems (using [`eigs`](@ref))
 or singular value decompositions (using [`svds`](@ref)).
 
+!!! note
+    The ARPACK Fortran library is not re-entrant. `Arpack.jl` should only be used from one thread in a Julia program.
+
 `eigs` calculates the eigenvalues and, optionally, eigenvectors of a matrix
 using implicitly restarted Lanczos or Arnoldi iterations for real symmetric or
-general nonsymmetric matrices respectively.  The input matrix `A` can be any 
-structured `AbstractMatrix` that implements the in-place product 
+general nonsymmetric matrices respectively.  The input matrix `A` can be any
+structured `AbstractMatrix` that implements the in-place product
 method `LinearAlgebra.mul!(y, A, x)`.
 
 For the single matrix version,
@@ -198,12 +201,6 @@ julia> λ
     | `nothing`       | ordinary (forward)               | ``Av = Bv\lambda``                |
     | real or complex | inverse with level shift `sigma` | ``(A - \sigma B )^{-1}B = v\nu`` |
 
-
-```@docs
-Arpack.eigs(::Any)
-Arpack.eigs(::Any, ::Any)
-Arpack.svds
-```
 
 ```@meta
 DocTestSetup = nothing
