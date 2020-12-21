@@ -100,7 +100,6 @@ function aupd_wrapper(T, matvecA!::Function, matvecB::Function, solveSI::Functio
             elseif ido[] == 99
                 break
             else
-                @show ido[]
                 throw(XYAUPD_Exception(ERR_UNEXPECTED_BEHAVIOR))
             end
         elseif mode == 3 && bmat == "I" # corresponds to dsdrv2, dndrv2 or zndrv2
