@@ -1,5 +1,4 @@
-# [eigs (generalized)](@id man-eigsgen)
-(
+# [Generalized Eigen Decomposition](@id man-eigsgen)
 
 ```@meta
 DocTestSetup = :(using Arpack, LinearAlgebra, SparseArrays)

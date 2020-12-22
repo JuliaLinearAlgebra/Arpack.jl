@@ -1,8 +1,11 @@
-# [svds](@id man-svds)
+# [Singular Value Decomposition](@id man-svds)
 
 ```@meta
 DocTestSetup = :(using Arpack, LinearAlgebra, SparseArrays, Random)
 ```
+
+`svds(A; nsv=6, ritzvec=true, tol=0.0, maxiter=1000, ncv=2*nsv, v0=zeros((0,))) -> (SVD([left_sv,] s, [right_sv,]), nconv, niter, nmult, resid)`
+
 Computes the largest singular values `s` of `A` using implicitly restarted Lanczos
 iterations derived from [`eigs`](@ref).
 
