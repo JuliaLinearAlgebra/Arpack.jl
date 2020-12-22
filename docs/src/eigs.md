@@ -1,6 +1,5 @@
 # [eigs](@id man-eigs)
 
-
 ```@meta
 DocTestSetup = :(using Arpack, LinearAlgebra, SparseArrays)
 ```

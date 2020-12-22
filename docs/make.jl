@@ -11,7 +11,7 @@ makedocs(
         "eigs" => "eigs.md",
         "eigs (generalized)" => "eigs_gen.md",
         "svds" => "svds.md",
-        "API" => "api.md",
+        "API Reference" => "api.md",
     ]
 )
 

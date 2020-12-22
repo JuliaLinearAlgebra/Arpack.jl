@@ -31,7 +31,7 @@ iterations derived from [`eigs`](@ref).
 * `nmult`: Number of matrix--vector products used.
 * `resid`: Final residual vector.
 
-# Examples
+**Examples**
 
 ```jldoctest
 julia> Random.seed!(123);
@@ -70,7 +70,7 @@ julia> Z.V
 
 !!! note "Implementation"
     `svds(A)` is formally equivalent to calling [`eigs`](@ref) to perform implicitly restarted
-    Lanczos tridiagonalization on the Hermitian matrix ``A^\\prime A`` or ``AA^\\prime`` such
+    Lanczos tridiagonalization on the Hermitian matrix ``A^\prime A`` or ``AA^\prime`` such
     that the size is smallest.
 
 ```@meta
