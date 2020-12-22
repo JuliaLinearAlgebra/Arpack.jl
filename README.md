@@ -1,6 +1,6 @@
 # Arpack
 
-[![][docs-latest-img]][docs-latest-url]
+[![][docs-stable-img]][docs-stable-url]
 
 Julia wrapper for the [arpack](https://github.com/opencollab/arpack-ng/) library
 designed to solve large-scale eigenvalue problems.
