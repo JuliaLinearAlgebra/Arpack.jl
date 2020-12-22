@@ -21,7 +21,7 @@ include("libarpack.jl")
     eigs(A; nev=6, ncv=max(20,2*nev+1), which=:LM, tol=0.0, maxiter=300, sigma=nothing, ritzvec=true, explicittransform=:auto, v0=zeros((0,))) -> (d,[v,],nconv,niter,nmult,resid)
 
 Computes eigenvalues `d` of `A` using implicitly restarted Lanczos or Arnoldi iterations for real symmetric or
-general nonsymmetric matrices respectively. See [the manual](@ref lib-itereigen) for more information.
+general nonsymmetric matrices respectively. See [the manual](@ref man-eigs) for more information.
 
 `eigs` returns the `nev` requested eigenvalues in `d`, the corresponding Ritz vectors `v`
 (only if `ritzvec=true`), the number of converged eigenvalues `nconv`, the number of
@@ -39,8 +39,8 @@ julia> λ, ϕ = eigs(A, nev = 2);
 
 julia> λ
 2-element Array{Float64,1}:
- 4.0
- 3.0
+ 3.9999999999999996
+ 3.000000000000001
 ```
 """
 eigs(A; kwargs...) = eigs(A, I; kwargs...)
@@ -61,8 +61,7 @@ end
 """
     eigs(A, B; nev=6, ncv=max(20,2*nev+1), which=:LM, tol=0.0, maxiter=300, sigma=nothing, ritzvec=true, v0=zeros((0,))) -> (d,[v,],nconv,niter,nmult,resid)
 
-Computes generalized eigenvalues `d` of `A` and `B` using implicitly restarted Lanczos or Arnoldi iterations for
-real symmetric or general nonsymmetric matrices respectively. See [the manual](@ref lib-itereigen) for more information.
+Computes generalized eigenvalues `d` of `A` and `B` using implicitly restarted Lanczos or Arnoldi iterations for real symmetric or general nonsymmetric matrices respectively. See [the manual](@ref man-eigsgen) for more information.
 """
 eigs(A, B; kwargs...) = _eigs(A, B; kwargs...)
 function _eigs(A, B;
@@ -310,71 +309,7 @@ end
     svds(A; nsv=6, ritzvec=true, tol=0.0, maxiter=1000, ncv=2*nsv, v0=zeros((0,))) -> (SVD([left_sv,] s, [right_sv,]), nconv, niter, nmult, resid)
 
 Computes the largest singular values `s` of `A` using implicitly restarted Lanczos
-iterations derived from [`eigs`](@ref).
-
-**Inputs**
-
-* `A`: Linear operator whose singular values are desired. `A` may be represented as a
-  subtype of `AbstractArray`, e.g., a sparse matrix, or any other type supporting the four
-  methods `size(A)`, `eltype(A)`, `A * vector`, and `A' * vector`.
-* `nsv`: Number of singular values. Default: 6.
-* `ritzvec`: If `true`, return the left and right singular vectors `left_sv` and `right_sv`.
-   If `false`, omit the singular vectors. Default: `true`.
-* `tol`: tolerance, see [`eigs`](@ref).
-* `maxiter`: Maximum number of iterations, see [`eigs`](@ref). Default: 1000.
-* `ncv`: Maximum size of the Krylov subspace, see [`eigs`](@ref) (there called `nev`). Default: `2*nsv`.
-* `v0`: Initial guess for the first Krylov vector. It may have length `min(size(A)...)`, or 0.
-
-**Outputs**
-
-* `svd`: An `SVD` object containing the left singular vectors, the requested values, and the
-  right singular vectors. If `ritzvec = false`, the left and right singular vectors will be
-  empty. `U`, `S`, `V` and `Vt` can be obtained from the SVD object with `Z.U`, `Z.S`, `Z.V`
-  and `Z.Vt`, where `Z = svds(A)[1]` and `U * Diagonal(S) * Vt` is a low-rank approximation
-  of `A` with rank `nsv`. Internally `Vt` is stored and hence `Vt` is more efficient to extract than `V`.
-* `nconv`: Number of converged singular values.
-* `niter`: Number of iterations.
-* `nmult`: Number of matrix--vector products used.
-* `resid`: Final residual vector.
-
-# Examples
-
-```jldoctest
-julia> A = Diagonal(1:5);
-
-julia> Z = svds(A, nsv = 2)[1];
-
-julia> Z.U
-5×2 Array{Float64,2}:
- -0.0           1.38778e-17
- -0.0          -0.0
- -6.66134e-17   1.66533e-16
- -1.1354e-16    1.0
- -1.0          -1.1354e-16
-
-julia> Z.S
-2-element Array{Float64,1}:
- 5.0
- 4.0
-
-julia> Z.Vt
-2×5 Array{Float64,2}:
- 0.0          0.0  -1.11022e-16  -1.41925e-16  -1.0
- 5.55112e-17  0.0   2.22045e-16   1.0          -1.52656e-16
-
-julia> Z.V
-5×2 Adjoint{Float64,Array{Float64,2}}:
-  0.0           5.55112e-17
-  0.0           0.0
- -1.11022e-16   2.22045e-16
- -1.41925e-16   1.0
- -1.0          -1.52656e-16
- ```
-
-!!! note "Implementation"
-    `svds(A)` is formally equivalent to calling [`eigs`](@ref) to perform implicitly restarted
-    Lanczos tridiagonalization on the Hermitian matrix ``A^\\prime A`` or ``AA^\\prime`` such
-    that the size is smallest.
+iterations derived from [`eigs`](@ref). See [the manual](@ref man-svds) for more information.
 """
 svds(A; kwargs...) = _svds(A; kwargs...)
 function _orth!(P)
