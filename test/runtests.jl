@@ -333,3 +333,45 @@ let A = [1. 0. 0.; 0. 0. 0.; 0. 0. 0.]
     @test U'U ≈ I
     @test V'V ≈ I
 end
+
+# Problematic example from #118
+@testset "issue 118" begin
+    ωc = 1.2
+    ωa = 0.9
+    γ = 0.5
+    κ = 1.1
+
+    sz = sparse(ComplexF64[1 0; 0 -1])
+    sp = sparse(ComplexF64[0 1; 0 0])
+    sm = sparse(collect(sp'))
+    ids = one(sz)
+
+    a = sparse(diagm(1 => ComplexF64[sqrt(i) for i=1:10]))
+    ida = one(a)
+
+    Ha = kron(ida, 0.5*ωa*sz)
+    Hc = kron(ωc*a'*a, ids)
+    Hint = sparse(kron(a', sm) + kron(a, sp))
+    H = Ha + Hc + Hint
+
+    Ja = kron(ida, sqrt(γ)*sm)
+    Jc = kron(sqrt(κ)*a, ids)
+    J = sqrt(2) .* [Ja, Jc]
+    Jdagger = adjoint.(J)
+    rates = 0.5 .* ones(length(J))
+
+    spre(x) = kron(one(x), x)
+    spost(x) = kron(permutedims(x), one(x))
+
+    L = spre(-1im*H) + spost(1im*H)
+    for i=1:length(J)
+        jdagger_j = rates[i]/2*Jdagger[i]*J[i]
+        L -= spre(jdagger_j) + spost(jdagger_j)
+        L += spre(rates[i]*J[i]) * spost(Jdagger[i])
+    end
+
+    for _=1:100
+        d, rest = eigs(L, nev=2, which=:LR)
+        @test abs(d[1]) < 1e-9
+    end
+end
