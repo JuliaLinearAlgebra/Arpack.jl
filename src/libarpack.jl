@@ -50,7 +50,7 @@ end
 function aupd_wrapper(T, matvecA!::Function, matvecB::Function, solveSI::Function, n::Integer,
                       sym::Bool, cmplx::Bool, bmat,
                       nev::Integer, ncv::Integer, which,
-                      tol::Real, maxiter::Integer, mode::Integer, v0::Vector)
+                      tol::Real, maxiter::Integer, mode::Integer, v0::Vector, check::Bool)
     lworkl = cmplx ? ncv * (3*ncv + 5) : (sym ? ncv * (ncv + 8) :  ncv * (3*ncv + 6) )
     TR = cmplx ? T.types[1] : T
     TOL = Ref{TR}(tol)
@@ -89,6 +89,9 @@ function aupd_wrapper(T, matvecA!::Function, matvecB::Function, solveSI::Functio
                   iparam, ipntr, workd, workl, lworkl, info)
         end
         if info[] != 0
+            if info[] == 1 && !check
+                return (resid, v, n, iparam, ipntr, workd, workl, lworkl, rwork, TOL)
+            end
             throw(XYAUPD_Exception(info[]))
         end
 

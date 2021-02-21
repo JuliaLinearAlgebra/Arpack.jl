@@ -18,7 +18,7 @@ include("libarpack.jl")
 
 ## eigs
 """
-    eigs(A; nev=6, ncv=max(20,2*nev+1), which=:LM, tol=0.0, maxiter=300, sigma=nothing, ritzvec=true, explicittransform=:auto, v0=zeros((0,))) -> (d,[v,],nconv,niter,nmult,resid)
+    eigs(A; nev=6, ncv=max(20,2*nev+1), which=:LM, tol=0.0, maxiter=300, sigma=nothing, ritzvec=true, explicittransform=:auto, v0=zeros((0,)), check=true) -> (d,[v,],nconv,niter,nmult,resid)
 
 Computes eigenvalues `d` of `A` using implicitly restarted Lanczos or Arnoldi iterations for real symmetric or
 general nonsymmetric matrices respectively. See [the manual](@ref man-eigs) for more information.
@@ -28,6 +28,9 @@ general nonsymmetric matrices respectively. See [the manual](@ref man-eigs) for 
 iterations `niter` and the number of matrix vector multiplications `nmult`, as well as the
 final residual vector `resid`. The parameter `explicittransform` takes the values `:auto`, `:none`
 or `:shiftinvert`, specifying if shift and invert should be explicitly invoked in julia code.
+
+When `check = true`, an error is thrown if maximum number of iterations taken (`info = 1`). This usually means all possible eigenvalues has been found according to ARPACK manual.
+When `check = false`, return currently converged eigenvalues when `info = 1`. Only a `@warn` will given.
 
 # Examples
 ```jldoctest
@@ -59,15 +62,18 @@ function eigs(A::AbstractMatrix, B::AbstractMatrix; kwargs...)
     eigs(convert(AbstractMatrix{Tnew}, A), convert(AbstractMatrix{Tnew}, B); kwargs...)
 end
 """
-    eigs(A, B; nev=6, ncv=max(20,2*nev+1), which=:LM, tol=0.0, maxiter=300, sigma=nothing, ritzvec=true, v0=zeros((0,))) -> (d,[v,],nconv,niter,nmult,resid)
+    eigs(A, B; nev=6, ncv=max(20,2*nev+1), which=:LM, tol=0.0, maxiter=300, sigma=nothing, ritzvec=true, v0=zeros((0,)), check=true) -> (d,[v,],nconv,niter,nmult,resid)
 
 Computes generalized eigenvalues `d` of `A` and `B` using implicitly restarted Lanczos or Arnoldi iterations for real symmetric or general nonsymmetric matrices respectively. See [the manual](@ref man-eigsgen) for more information.
+
+When `check = true`, an error is thrown if maximum number of iterations taken (`info = 1`). This usually means all possible eigenvalues has been found according to ARPACK manual.
+When `check = false`, return currently converged eigenvalues when `info = 1`. Only a `@warn` will given.
 """
 eigs(A, B; kwargs...) = _eigs(A, B; kwargs...)
 function _eigs(A, B;
                nev::Integer=6, ncv::Integer=max(20,2*nev+1), which=:LM,
                tol=0.0, maxiter::Integer=300, sigma=nothing, v0::Vector=zeros(eltype(A),(0,)),
-               ritzvec::Bool=true, explicittransform::Symbol=:auto)
+               ritzvec::Bool=true, explicittransform::Symbol=:auto, check::Bool=true)
     n = checksquare(A)
 
     eigval_postprocess = false; # If we need to shift-and-invert eigvals as postprocessing
@@ -233,10 +239,10 @@ function _eigs(A, B;
 
     # Compute the Ritz values and Ritz vectors
     (resid, v, ldv, iparam, ipntr, workd, workl, lworkl, rwork, TOL) =
-        aupd_wrapper(T, matvecA!, matvecB, solveSI, n, sym, iscmplx, bmat, nev, ncv, whichstr, tol, maxiter, mode, v0)
-
+        aupd_wrapper(T, matvecA!, matvecB, solveSI, n, sym, iscmplx, bmat, nev, ncv, whichstr, tol, maxiter, mode, v0, check)
     # Postprocessing to get eigenvalues and eigenvectors
-    output = eupd_wrapper(T, n, sym, iscmplx, bmat, nev, whichstr, ritzvec, TOL,
+    !check && (iparam[5] < nev) && @warn "nev = $nev, but only $(iparam[5]) found!"
+    output = eupd_wrapper(T, n, sym, iscmplx, bmat, check ? nev : iparam[5], whichstr, ritzvec, TOL,
                           resid, ncv, v, ldv, sigma, iparam, ipntr, workd, workl, lworkl, rwork)
 
     # Issue 10495, 10701: Check that all eigenvalues are converged
@@ -306,10 +312,13 @@ function svds(A::AbstractMatrix{T}; kwargs...) where T
 end
 
 """
-    svds(A; nsv=6, ritzvec=true, tol=0.0, maxiter=1000, ncv=2*nsv, v0=zeros((0,))) -> (SVD([left_sv,] s, [right_sv,]), nconv, niter, nmult, resid)
+    svds(A; nsv=6, ritzvec=true, tol=0.0, maxiter=1000, ncv=2*nsv, v0=zeros((0,))) -> (SVD([left_sv,] s, [right_sv,]), nconv, niter, nmult, resid, check=true)
 
 Computes the largest singular values `s` of `A` using implicitly restarted Lanczos
 iterations derived from [`eigs`](@ref). See [the manual](@ref man-svds) for more information.
+
+When `check = true`, an error is thrown if maximum number of iterations taken (`info = 1`). This usually means all possible eigenvalues has been found according to ARPACK manual.
+When `check = false`, return currently converged eigenvalues when `info = 1`. Only a `@warn` will given.
 """
 svds(A; kwargs...) = _svds(A; kwargs...)
 function _orth!(P)
@@ -318,7 +327,7 @@ function _orth!(P)
     rsign = [_sign(R[i,i]) for i in 1:size(R,2)]
     return rmul!(Matrix(Q), Diagonal(rsign))
 end
-function _svds(X; nsv::Int = 6, ritzvec::Bool = true, tol::Float64 = 0.0, maxiter::Int = 1000, ncv::Int = 2*nsv, v0::Vector=zeros(eltype(X),(0,)))
+function _svds(X; nsv::Int = 6, ritzvec::Bool = true, tol::Float64 = 0.0, maxiter::Int = 1000, ncv::Int = 2*nsv, v0::Vector=zeros(eltype(X),(0,)), check::Bool=true)
     if nsv < 1
         throw(ArgumentError("number of singular values (nsv) must be ≥ 1, got $nsv"))
     end
@@ -330,7 +339,7 @@ function _svds(X; nsv::Int = 6, ritzvec::Bool = true, tol::Float64 = 0.0, maxite
     if length(v0) ∉ [0,n]
         throw(DimensionMismatch("length of v0, the guess for the starting right Krylov vector, must be 0, or $n, got $(length(v0))"))
     end
-    ex    = eigs(AtA_or_AAt(X), I; which = :LM, ritzvec = ritzvec, nev = nsv, tol = tol, maxiter = maxiter, v0=v0)
+    ex    = eigs(AtA_or_AAt(X), I; which = :LM, ritzvec = ritzvec, nev = nsv, tol = tol, maxiter = maxiter, v0=v0, check=check)
     # ind   = [1:2:ncv;]
     # sval  = abs.(ex[1][ind])
 
