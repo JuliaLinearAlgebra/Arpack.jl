@@ -375,3 +375,41 @@ end
         @test abs(d[1]) < 1e-9
     end
 end
+
+# Problematic examples from #85
+@testset "maxiter reach not throw err" begin
+    a = rand(100, 100)
+    a = a + a'
+    nev = 5
+    try
+        e, v = eigs(a, nev = nev, maxiter = 2)
+    catch err
+        @test isa(err, Arpack.XYAUPD_Exception)
+        @test err.info == 1
+    end
+
+    e, v = eigs(a, nev = nev, maxiter = 2, check = 2)
+    println("An warning 'nev = $nev, but only x found!' is expected here:")
+    e, v = eigs(a, nev = nev, maxiter = 2, check = 1)
+    e0, v0 = eigs(a, nev = nev)
+    n = length(e)
+    @test all(e[1:n] .≈ e0[1:n])
+    @test abs.(v[:, 1:n]'v0[:, 1:n]) ≈ I
+
+    try
+        e, v = svds(a, nsv = 5, maxiter = 2)
+    catch err
+        @show typeof(err)
+        @test isa(err, Arpack.XYAUPD_Exception)
+        @test err.info == 1
+    end
+
+    r, _ = svds(a, nsv = 5, maxiter = 2, check = 2)
+    println("An warning 'nev = $nev, but only x found!' is expected here:")
+    r, _ = svds(a, nsv = 5, maxiter = 2, check = 1)
+    r0, _ = svds(a, nsv = 5)
+    n = length(r.S)
+    @test all(r.S[1:n] .≈ r0.S[1:n])
+    @test abs.(r.U[:, 1:n]'r0.U[:, 1:n]) ≈ I
+    @test abs.(r.V[:, 1:n]'r0.V[:, 1:n]) ≈ I
+end
