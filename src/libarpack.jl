@@ -201,17 +201,20 @@ function eupd_wrapper(T, n::Integer, sym::Bool, cmplx::Bool, bmat,
     select = Vector{BlasInt}(undef, ncv)
     info   = Ref{BlasInt}(0)
 
-    dmap = x -> abs.(x)
+    dmap = if which == "LM" || which == "SM"
+      abs
+    elseif which == "LR" || which == "LA" || which == "BE" || which == "SR" || which == "SA"
+      real
+    elseif which == "LI" || which == "SI"
+      abs ∘ imag # ARPACK returns largest,smallest abs(imaginary) (complex pairs come together)
+    else
+      error("unknown which string $which")
+    end
+
+    rev = which[1] == 'L'
+
     if iparam[7] == 3 # shift-and-invert
-        dmap = x -> abs.(1 ./ (x .- sigma))
-    elseif which == "LR" || which == "LA" || which == "BE"
-        dmap = real
-    elseif which == "SR" || which == "SA"
-        dmap = x -> -real(x)
-    elseif which == "LI"
-        dmap = imag
-    elseif which == "SI"
-        dmap = x -> -imag(x)
+      dmap = dmap ∘ (x -> 1 / (x - sigma))
     end
 
     if cmplx
@@ -225,7 +228,7 @@ function eupd_wrapper(T, n::Integer, sym::Bool, cmplx::Bool, bmat,
             throw(XYEUPD_Exception(info[]))
         end
 
-        p = sortperm(dmap(d[1:nev]), rev=true)
+        p = sortperm(d[1:nev], by=dmap, rev=rev)
         return ritzvec ? (d[p], v[1:n, p],iparam[5],iparam[3],iparam[9],resid) : (d[p],iparam[5],iparam[3],iparam[9],resid)
     elseif sym
         d = Vector{T}(undef, nev)
@@ -237,7 +240,7 @@ function eupd_wrapper(T, n::Integer, sym::Bool, cmplx::Bool, bmat,
             throw(XYEUPD_Exception(info[]))
         end
 
-        p = sortperm(dmap(d), rev=true)
+        p = sortperm(d, by=dmap, rev=rev)
         return ritzvec ? (d[p], v[1:n, p],iparam[5],iparam[3],iparam[9],resid) : (d[p],iparam[5],iparam[3],iparam[9],resid)
     else
         dr = Vector{T}(undef, nev+1)
@@ -278,9 +281,9 @@ function eupd_wrapper(T, n::Integer, sym::Bool, cmplx::Bool, bmat,
         d = complex.(dr, di)
 
         if j == nev+1
-            p = sortperm(dmap(d[1:nev]), rev=true)
+            p = sortperm(d[1:nev], by=dmap, rev=rev)
         else
-            p = sortperm(dmap(d), rev=true)
+            p = sortperm(d, by=dmap, rev=rev)
             p = p[1:nev]
         end
 
