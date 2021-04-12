@@ -10,18 +10,42 @@ struct XYAUPD_Exception <: Exception
     info::BlasInt
 end
 
+const AUPD_ERRORS = [
+    (3, "No shifts could be applied during a cycle of the Implicitly restarted Arnoldi iteration. One possibility is to increase the size of NCV relative to NEV. "),
+    (2, "No longer an informational error. Deprecated starting with release 2 of ARPACK."),
+    (1, """Maximum number of iterations taken. All possible eigenvalues of OP has been found.
+          IPARAM(5) returns the number of wanted converged Ritz values."""),
+    (0, "Normal exit."),
+    (-1, "N must be positive."),
+    (-2, "NEV must be positive."),
+    (-3, "NCV-NEV >= 2 and less than or equal to N."),
+    (-4, "The maximum number of Arnoldi update iterations allowed must be greater than zero."),
+    (-5, " WHICH must be one of 'LM', 'SM', 'LR', 'SR', 'LI', 'SI'"),
+    (-6, "BMAT must be one of 'I' or 'G'."),
+    (-7, "Length of private work array WORKL is not sufficient."),
+    (-8, "Error return from LAPACK eigenvalue calculation."),
+    (-9, "Starting vector is zero."),
+    (-10, "IPARAM(7) must be 1,2,3,4."),
+    (-11, "IPARAM(7) = 1 and BMAT = 'G' are incompatible."),
+    (-12, "IPARAM(1) must be equal to 0 or 1."),
+    (-13, "NEV and WHICH = 'BE' are incompatible."),
+    (-9999, """Could not build an Arnoldi factorization.
+           IPARAM(5) returns the size of the current Arnoldi factorization.
+           The user is advised to check that enough workspace and array storage has been allocated.""")
+]
+
 function Base.showerror(io::IO, ex::XYAUPD_Exception)
     info = ex.info
-    if info == -8
-        @error "XYAUPD_Exception: Error return from LAPACK eigenvalue calculation." info
-    elseif info == -9
-        @error "XYAUPD_Exception: Starting vector is zero." info
-    elseif info == -9999
-        @error "XYAUPD_Exception: Could not build an Arnoldi factorization." info
-    elseif info == ERR_UNEXPECTED_BEHAVIOR
+
+    if info == ERR_UNEXPECTED_BEHAVIOR
         @error "XYAUPD_Exception: Undefined error"
     else
-        @error "XYAUPD_Exception: Please check XYAUPD error codes in the ARPACK manual." info
+      idx = searchsorted(AUPD_ERRORS, info, by=first, rev=true)
+      if isempty(idx)
+          @error "XYAUPD_Exception: Please check XYAUPD error codes in the ARPACK manual." info
+      else
+          @error "XYAUPD_Exception: $(last(AUPD_ERRORS[first(idx)]))" info
+      end
     end
 end
 
@@ -29,19 +53,41 @@ struct XYEUPD_Exception <: Exception
     info::BlasInt
 end
 
+const EUPD_ERRORS = [
+    (1, """The Schur form computed by LAPACK routine lahqr could not be reordered by LAPACK routine trsen.
+       Re-enter subroutine neupd with IPARAM(5)NCV and increase the size of the arrays DR and DI to have dimension at least dimension NCV and allocate at least NCV columns for Z.
+       NOTE: Not necessary if Z and V share the same space. Please notify the authors if this error occurs."""),
+    (0, "Normal exit."),
+    (-1, "N must be positive."),
+    (-2, "NEV must be positive."),
+    (-3, "NCV-NEV >= 2 and less than or equal to N."),
+    (-5, "WHICH must be one of 'LM', 'SM', 'LR', 'SR', 'LI', 'SI'"),
+    (-6, "BMAT must be one of 'I' or 'G'."),
+    (-7, "Length of private work WORKL array is not sufficient."),
+    (-8, """Error return from calculation of a real Schur form.
+        "Informational error from LAPACK routine lahqr ."""),
+    (-9, """Error return from calculation of eigenvectors.
+        "Informational error from LAPACK routine dtrevc."""),
+    (-10, "IPARAM(7) must be 1,2,3,4."),
+    (-11, "IPARAM(7) = 1 and BMAT = 'G' are incompatible."),
+    (-12, "HOWMNY = 'S' not yet implemented"),
+    (-13, "HOWMNY must be one of 'A' or 'P' if RVEC = .true."),
+    (-14, "DNAUPD  did not find any eigenvalues to sufficient accuracy."),
+    (-15, """DNEUPD got a different count of the number of converged Ritz values than NAUPD got.
+          This indicates the user probably made an error in passing data from NAUPD to NEUPD or that the data was modified before entering NEUPD""")
+]
+
 function Base.showerror(io::IO, ex::XYEUPD_Exception)
     info = ex.info
-    if info == -8
-        @error "XYEUPD_Exception: Error return from calculation of a real Schur form." info
-    elseif info == -9
-        @error "XYEUPD_Exception: Error return from calculation of eigenvectors." info
-    elseif info == -14
-        @error "XYEUPD_Exception: Did not find any eigenvalues to sufficient accuracy." info
-        @info "Try with a different starting vector or more Lanczos vectors by increasing the value of ncv."
-    elseif info == ERR_UNEXPECTED_BEHAVIOR
+    if info == ERR_UNEXPECTED_BEHAVIOR
         @error "XYEUPD_Exception: Undefined error"
     else
-        @error "XYEUPD_Exception: Please check XYEUPD error codes in the ARPACK manual." info
+      idx = searchsorted(EUPD_ERRORS, info, by=first, rev=true)
+      if isempty(idx)
+          @error "XYEUPD_Exception: Please check XYEUPD error codes in the ARPACK manual." info
+      else
+          @error "XYEUPD_Exception: $(last(EUPD_ERRORS[first(idx)]))" info
+      end
     end
 end
 
