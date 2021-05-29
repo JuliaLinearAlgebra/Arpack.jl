@@ -13,7 +13,7 @@ julia> Pkg.add("Arpack")
 ```
 
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
-[docs-latest-url]: http://JuliaLinearAlgebra.github.io/Arpack.jl/latest/
+[docs-latest-url]: http://arpack.JuliaLinearAlgebra.org/latest/
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
-[docs-stable-url]: http://JuliaLinearAlgebra.github.io/Arpack.jl/stable/
+[docs-stable-url]: http://arpack.JuliaLinearAlgebra.org/stable/
