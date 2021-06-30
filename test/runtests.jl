@@ -413,3 +413,14 @@ end
     @test abs.(r.U[:, 1:n]'r0.U[:, 1:n]) ≈ I
     @test abs.(r.V[:, 1:n]'r0.V[:, 1:n]) ≈ I
 end
+
+# Regression test for #110.
+@testset "correct Krylov vector length check" begin
+    m = 4
+    n = 8
+    a  = sprandn(m,n,0.4)
+
+    @test svds(a, nsv=1, v0 = ones(min(m, n)))[1].S ≈ svds(a', nsv=1, v0 = ones(min(m, n)))[1].S
+    @test_throws DimensionMismatch svds(a, nsv=1, v0 = ones(max(m, n)))
+    @test_throws DimensionMismatch svds(a', nsv=1, v0 = ones(max(m, n)))
+end
