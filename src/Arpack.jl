@@ -339,7 +339,7 @@ function _svds(X; nsv::Int = 6, ritzvec::Bool = true, tol::Float64 = 0.0, maxite
     end
     m, n = size(X)
     otype = eltype(X)
-    if length(v0) ∉ [0,min(m, n)]
+    if length(v0) ∉ (0, min(m, n))
         min_mn = min(m, n)
         throw(DimensionMismatch("length of v0, the guess for the starting right Krylov vector, must be 0, or $min_mn, got $(length(v0))"))
     end
