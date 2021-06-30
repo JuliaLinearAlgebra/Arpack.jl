@@ -421,4 +421,6 @@ end
     a  = sprandn(m,n,0.4)
 
     @test svds(a, nsv=1, v0 = ones(min(m, n)))[1].S ≈ svds(a', nsv=1, v0 = ones(min(m, n)))[1].S
+    @test_throws DimensionMismatch svds(a, nsv=1, v0 = ones(max(m, n)))
+    @test_throws DimensionMismatch svds(a', nsv=1, v0 = ones(max(m, n)))
 end
