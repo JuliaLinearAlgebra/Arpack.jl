@@ -1,5 +1,6 @@
 # Arpack
 
+[![CI](https://github.com/JuliaLinearAlgebra/Arpack.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/JuliaLinearAlgebra/Arpack.jl/actions/workflows/ci.yml)
 [![][docs-stable-img]][docs-stable-url]
 
 Julia wrapper for the [arpack](https://github.com/opencollab/arpack-ng/) library
