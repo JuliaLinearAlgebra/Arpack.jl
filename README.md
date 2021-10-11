@@ -18,3 +18,7 @@ julia> Pkg.add("Arpack")
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: http://arpack.JuliaLinearAlgebra.org/stable/
+
+# Alternate packages
+
+Users running into issues with this package may want to try [KrylovKit.jl](https://github.com/Jutho/KrylovKit.jl) or [ArnoldiMethod.jl](https://github.com/haampie/ArnoldiMethod.jl).
