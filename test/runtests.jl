@@ -116,7 +116,7 @@ end
         -1.0   0.0   0.0   0.0   0.0   0.0   7.0  1.0
         -1.0  -1.0  -1.0  -1.0  -1.0  -1.0  -1.0  8.0
     ]
-    d, = eigs(A6965,which=:SM,nev=2,ncv=4,tol=eps())
+    d, = eigs(A6965,which=:LM,nev=2,ncv=4,tol=eps(), sigma=0.0)
     @test d[1] ≈ 2.5346936860350002
     @test real(d[2]) ≈ 2.6159972444834976
     @test abs(imag(d[2])) ≈ 1.2917858749046127
@@ -413,6 +413,7 @@ end
     @test abs.(r.V[:, 1:n]'r0.V[:, 1:n]) ≈ I
 end
 
+
 # Regression test for #110.
 @testset "correct Krylov vector length check" begin
     m = 4
@@ -422,4 +423,32 @@ end
     @test svds(a, nsv=1, v0 = ones(min(m, n)))[1].S ≈ svds(a', nsv=1, v0 = ones(min(m, n)))[1].S
     @test_throws DimensionMismatch svds(a, nsv=1, v0 = ones(max(m, n)))
     @test_throws DimensionMismatch svds(a', nsv=1, v0 = ones(max(m, n)))
+end
+
+@testset "ordering modes" begin
+    N = 10
+    nev = 4
+    M = rand(N,N)
+
+    S = eigvals(M)
+
+    abs_imag = abs ∘ imag # ARPACK returns largest,smallest abs(imaginary) (complex pairs come together)
+
+    @testset "no shift-invert" begin
+        for (which, sortby, rev) in [(:LM, abs, true), (:LR, real, true), (:LI, abs_imag, true),
+                                     (:SM, abs, false), (:SR, real, false), (:SI, abs_imag, false)]
+            d, _ = eigs(M, nev=nev, which=which)
+            e = partialsort(S, 1:nev, by=sortby, rev=rev)
+            @test sortby.(e) ≈ sortby.(d)
+        end
+    end
+
+    @testset "shift-invert" begin
+        for (which, sortby, rev) in [(:LM, abs, true), (:LR, real, true), (:LI, abs_imag, true),
+                                     (:SM, abs, false), (:SR, real, false), (:SI, abs_imag, false)]
+            d, _ = eigs(M, nev=nev, which=which, sigma=0.0)
+            e = S[partialsortperm(S, 1:nev, by=sortby ∘ inv, rev=rev)]
+            @test sortby.(e) ≈ sortby.(d)
+        end
+    end
 end
