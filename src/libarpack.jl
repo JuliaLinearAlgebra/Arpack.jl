@@ -299,8 +299,8 @@ for (T, saupd_name, seupd_name, naupd_name, neupd_name) in
                        iparam, ipntr, workd::Vector{$T}, workl::Vector{$T}, lworkl, info)
             ccall(($(string(naupd_name)), libarpack), Cvoid,
                   (Ref{BlasInt}, Ptr{UInt8}, Ref{BlasInt}, Ptr{UInt8}, Ref{BlasInt},
-                   Ptr{$T}, Ptr{$T}, Ref{BlasInt}, Ptr{$T}, Ref{BlasInt},
-                   Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ref{BlasInt}, Ref{BlasInt}, Clong, Clong),
+                   Ref{$T}, Ref{$T}, Ref{BlasInt}, Ref{$T}, Ref{BlasInt},
+                   Ref{BlasInt}, Ref{BlasInt}, Ref{$T}, Ref{$T}, Ref{BlasInt}, Ref{BlasInt}, Clong, Clong),
                   ido, bmat, n, evtype, nev,
                   TOL, resid, ncv, v, ldv,
                   iparam, ipntr, workd, workl, lworkl, info, 1, 2)
@@ -310,10 +310,10 @@ for (T, saupd_name, seupd_name, naupd_name, neupd_name) in
                   workev::Vector{$T}, bmat, n, evtype, nev, TOL::Ref{$T}, resid::Vector{$T}, ncv, v, ldv,
                   iparam, ipntr, workd::Vector{$T}, workl::Vector{$T}, lworkl, info)
             ccall(($(string(neupd_name)), libarpack), Cvoid,
-                  (Ref{BlasInt}, Ptr{UInt8}, Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ptr{$T}, Ref{BlasInt},
-                   Ref{$T}, Ref{$T}, Ptr{$T}, Ptr{UInt8}, Ref{BlasInt}, Ptr{UInt8}, Ref{BlasInt},
-                   Ptr{$T}, Ptr{$T}, Ref{BlasInt}, Ptr{$T}, Ref{BlasInt},
-                   Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ref{BlasInt}, Ref{BlasInt}, Clong, Clong, Clong),
+                  (Ref{BlasInt}, Ptr{UInt8}, Ref{BlasInt}, Ref{$T}, Ref{$T}, Ref{$T}, Ref{BlasInt},
+                   Ref{$T}, Ref{$T}, Ref{$T}, Ptr{UInt8}, Ref{BlasInt}, Ptr{UInt8}, Ref{BlasInt},
+                   Ref{$T}, Ref{$T}, Ref{BlasInt}, Ref{$T}, Ref{BlasInt},
+                   Ref{BlasInt}, Ref{BlasInt}, Ref{$T}, Ref{$T}, Ref{BlasInt}, Ref{BlasInt}, Clong, Clong, Clong),
                   rvec, howmny, select, dr, di, z, ldz,
                   sigmar, sigmai, workev, bmat, n, evtype, nev,
                   TOL, resid, ncv, v, ldv,
@@ -324,8 +324,8 @@ for (T, saupd_name, seupd_name, naupd_name, neupd_name) in
                        iparam, ipntr, workd::Vector{$T}, workl::Vector{$T}, lworkl, info)
             ccall(($(string(saupd_name)), libarpack), Cvoid,
                   (Ref{BlasInt}, Ptr{UInt8}, Ref{BlasInt}, Ptr{UInt8}, Ref{BlasInt},
-                   Ptr{$T}, Ptr{$T}, Ref{BlasInt}, Ptr{$T}, Ref{BlasInt},
-                   Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ref{BlasInt}, Ref{BlasInt}, Clong, Clong),
+                   Ref{$T}, Ref{$T}, Ref{BlasInt}, Ref{$T}, Ref{BlasInt},
+                   Ref{BlasInt}, Ref{BlasInt}, Ref{$T}, Ref{$T}, Ref{BlasInt}, Ref{BlasInt}, Clong, Clong),
                   ido, bmat, n, which, nev,
                   TOL, resid, ncv, v, ldv,
                   iparam, ipntr, workd, workl, lworkl, info, 1, 2)
@@ -335,10 +335,10 @@ for (T, saupd_name, seupd_name, naupd_name, neupd_name) in
                        bmat, n, evtype, nev, TOL::Ref{$T}, resid::Vector{$T}, ncv, v::Matrix{$T}, ldv,
                        iparam, ipntr, workd::Vector{$T}, workl::Vector{$T}, lworkl, info)
             ccall(($(string(seupd_name)), libarpack), Cvoid,
-                  (Ref{BlasInt}, Ptr{UInt8}, Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ref{BlasInt},
-                   Ptr{$T}, Ptr{UInt8}, Ref{BlasInt}, Ptr{UInt8}, Ref{BlasInt},
-                   Ptr{$T}, Ptr{$T}, Ref{BlasInt}, Ptr{$T}, Ref{BlasInt},
-                   Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ref{BlasInt}, Ref{BlasInt}, Clong, Clong, Clong),
+                  (Ref{BlasInt}, Ptr{UInt8}, Ref{BlasInt}, Ref{$T}, Ref{$T}, Ref{BlasInt},
+                   Ref{$T}, Ptr{UInt8}, Ref{BlasInt}, Ptr{UInt8}, Ref{BlasInt},
+                   Ref{$T}, Ref{$T}, Ref{BlasInt}, Ref{$T}, Ref{BlasInt},
+                   Ref{BlasInt}, Ref{BlasInt}, Ref{$T}, Ref{$T}, Ref{BlasInt}, Ref{BlasInt}, Clong, Clong, Clong),
                   rvec, howmny, select, d, z, ldz,
                   sigma, bmat, n, evtype, nev,
                   TOL, resid, ncv, v, ldv,
@@ -356,8 +356,8 @@ for (T, TR, naupd_name, neupd_name) in
                        rwork::Vector{$TR}, info)
             ccall(($(string(naupd_name)), libarpack), Cvoid,
                   (Ref{BlasInt}, Ptr{UInt8}, Ref{BlasInt}, Ptr{UInt8}, Ref{BlasInt},
-                   Ptr{$TR}, Ptr{$T}, Ref{BlasInt}, Ptr{$T}, Ref{BlasInt},
-                   Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ref{BlasInt}, Ptr{$TR}, Ref{BlasInt}, Clong, Clong),
+                   Ref{$TR}, Ref{$T}, Ref{BlasInt}, Ref{$T}, Ref{BlasInt},
+                   Ref{BlasInt}, Ref{BlasInt}, Ref{$T}, Ref{$T}, Ref{BlasInt}, Ref{$TR}, Ref{BlasInt}, Clong, Clong),
                   ido, bmat, n, evtype, nev,
                   TOL, resid, ncv, v, ldv,
                   iparam, ipntr, workd, workl, lworkl, rwork, info, 1, 2)
@@ -368,10 +368,10 @@ for (T, TR, naupd_name, neupd_name) in
                        iparam, ipntr, workd::Vector{$T}, workl::Vector{$T}, lworkl,
                        rwork::Vector{$TR}, info)
             ccall(($(string(neupd_name)), libarpack), Cvoid,
-                  (Ref{BlasInt}, Ptr{UInt8}, Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ref{BlasInt},
-                   Ptr{$T}, Ptr{$T}, Ptr{UInt8}, Ref{BlasInt}, Ptr{UInt8}, Ref{BlasInt},
-                   Ptr{$TR}, Ptr{$T}, Ref{BlasInt}, Ptr{$T}, Ref{BlasInt},
-                   Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ref{BlasInt}, Ptr{$TR}, Ref{BlasInt}, Clong, Clong, Clong),
+                  (Ref{BlasInt}, Ptr{UInt8}, Ref{BlasInt}, Ref{$T}, Ref{$T}, Ref{BlasInt},
+                   Ref{$T}, Ref{$T}, Ptr{UInt8}, Ref{BlasInt}, Ptr{UInt8}, Ref{BlasInt},
+                   Ref{$TR}, Ref{$T}, Ref{BlasInt}, Ref{$T}, Ref{BlasInt},
+                   Ref{BlasInt}, Ref{BlasInt}, Ref{$T}, Ref{$T}, Ref{BlasInt}, Ref{$TR}, Ref{BlasInt}, Clong, Clong, Clong),
                   rvec, howmny, select, d, z, ldz,
                   sigma, workev, bmat, n, evtype, nev,
                   TOL, resid, ncv, v, ldv,
