@@ -370,7 +370,7 @@ end
     end
 
     for _=1:100
-        d, rest = eigs(L, nev=2, which=:LR)
+        d, rest = eigs(L, nev=2, which=:LR, v0=rand(484)+im*rand(484))
         @test abs(d[1]) < 1e-9
     end
 end
