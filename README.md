@@ -21,4 +21,4 @@ julia> Pkg.add("Arpack")
 
 # Alternate packages
 
-Users running into issues with this package may want to try [KrylovKit.jl](https://github.com/Jutho/KrylovKit.jl) or [ArnoldiMethod.jl](https://github.com/haampie/ArnoldiMethod.jl).
+Users running into issues with this package may want to try [KrylovKit.jl](https://github.com/Jutho/KrylovKit.jl) or [ArnoldiMethod.jl](https://github.com/JuliaLinearAlgebra/ArnoldiMethod.jl).
