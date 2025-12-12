@@ -14,30 +14,22 @@ jobs:
       matrix:
         version:
           - '1'
-          - 'nightly'
         os:
           - ubuntu-latest
-          - macOS-latest
           - windows-latest
         arch:
-          - x86
           - x64
-        exclude:
-          # Remove some configurations from the build matrix to reduce CI time.
-          # See https://github.com/marketplace/actions/setup-julia-environment
-          # MacOS not available on x86
-          - {os: 'macOS-latest', arch: 'x86'}
-          # Don't test on all versions
-          - {os: 'macOS-latest', version: 'nightly'}
-          - {os: 'windows-latest', version: 'nightly'}
-          - {os: 'windows-latest', arch: 'x86'}
-          - {arch: 'x86', version: 'nightly'}
+        include:
+          - os: macOS-latest
+            arch: default
+            version: '1'
     steps:
       - uses: actions/checkout@v6
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
+      - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-runtest@latest
         with:
